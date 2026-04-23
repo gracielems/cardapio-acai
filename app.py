@@ -77,6 +77,6 @@ if st.button("🚀 ENVIAR PEDIDO PELO WHATSAPP"):
             f"💰 *TOTAL: R$ {valor_total:.2f}*"
         )
         # Substitua o número abaixo pelo seu número real com DDD
-        link = f"https://wa.me/5537990000000?text={urllib.parse.quote(msg)}"
+        link = f"https://wa.me/5537991031933?text={urllib.parse.quote(msg)}"
         st.success("Pedido gerado! Clique abaixo:")
         st.markdown(f'<a href="{link}" target="_blank" style="background-color: #25D366; color: white; padding: 10px; text-align: center; border-radius: 5px; display: block; text-decoration: none; font-weight: bold;">ENVIAR WHATSAPP</a>', unsafe_allow_html=True)
