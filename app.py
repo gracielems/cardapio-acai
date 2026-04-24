@@ -4,11 +4,10 @@ import urllib.parse
 # Configurações de Página
 st.set_page_config(page_title="Cardápio Jubilu", page_icon="🍧", layout="centered")
 
-# CSS AVANÇADO
+# CSS PERSONALIZADO (Corrigindo cores e sombras)
 st.markdown("""
     <style>
     .stApp { background-color: #ffffff; color: #31333F; }
-    
     .banner {
         background: linear-gradient(90deg, #4B0082 0%, #8A2BE2 100%);
         padding: 30px;
@@ -17,40 +16,30 @@ st.markdown("""
         text-align: center;
         margin: -60px -20px 30px -20px;
     }
-    
     .section-header { 
         color: #4B0082 !important; 
-        font-size: 20px;
-        font-weight: bold;
+        font-size: 20px; font-weight: bold;
         border-bottom: 2px solid #4B0082;
-        margin-top: 25px;
-        margin-bottom: 15px;
+        margin-top: 25px; margin-bottom: 15px;
     }
-
-    /* Estilo para os cards de combos */
     .combo-info {
-        background-color: #f8f4ff;
-        padding: 10px;
-        border-radius: 10px;
-        border-left: 5px solid #4B0082;
-        margin-bottom: 5px;
-        font-size: 14px;
+        background-color: #f8f4ff; padding: 10px;
+        border-radius: 10px; border-left: 5px solid #4B0082;
+        margin-bottom: 5px; font-size: 14px;
     }
-
     .stButton>button { 
-        width: 100%; 
-        background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
-        color: white !important; 
-        border-radius: 15px; 
-        font-weight: bold; 
-        height: 3.5em; 
-        border: none;
-        box-shadow: 0px 4px 10px rgba(37, 211, 102, 0.4);
+        width: 100%; background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
+        color: white !important; border-radius: 15px; font-weight: bold; height: 3.5em;
     }
-    
-    label { font-weight: bold !important; color: #4B0082 !important; }
     </style>
     """, unsafe_allow_html=True)
+
+# --- SISTEMA DE MEMÓRIA (CADASTRO LOCAL) ---
+# O Streamlit usa o session_state para manter dados enquanto a aba está aberta
+if 'nome_cliente' not in st.session_state:
+    st.session_state.nome_cliente = ""
+if 'endereco_cliente' not in st.session_state:
+    st.session_state.endereco_cliente = ""
 
 # --- TOPO ---
 st.markdown("""
@@ -70,23 +59,19 @@ copos_prontos = {
     "⭐ Nutella Premium (500ml) - R$ 34.00": {"preco": 34.00, "desc": "Muita Nutella original, morango e leite Ninho."}
 }
 
-# Aqui está o segredo: Um multiselect que já mostra os nomes e preços
-escolhidos = st.multiselect("Clique abaixo para selecionar seus combos:", list(copos_prontos.keys()))
+escolhidos = st.multiselect("Selecione seus combos:", list(copos_prontos.keys()))
 
-# Mostrar a descrição apenas do que foi selecionado para não poluir a tela
 valor_combos = 0.0
 if escolhidos:
-    st.write("📋 **Detalhes dos itens selecionados:**")
     for item in escolhidos:
         info = copos_prontos[item]
         st.markdown(f"""<div class="combo-info"><b>{item}</b><br>{info['desc']}</div>""", unsafe_allow_html=True)
         valor_combos += info['preco']
 
 # --- SEÇÃO 2: MONTE SEU COPO ---
-st.markdown('<div class="section-header">🛠️ 2. OU MONTE DO SEU JEITO</div>', unsafe_allow_html=True)
-
+st.markdown('<div class="section-header">🛠️ 2. MONTE DO SEU JEITO</div>', unsafe_allow_html=True)
 tamanhos = {"500ml": 18.00, "700ml": 23.00, "1 Litro": 32.00}
-escolha_tamanho = st.selectbox("Selecione um tamanho base:", ["Não vou montar um agora"] + list(tamanhos.keys()))
+escolha_tamanho = st.selectbox("Tamanho base:", ["Não vou montar um agora"] + list(tamanhos.keys()))
 
 preco_base_monte = 0.0
 selecionados_gratis = []
@@ -95,65 +80,62 @@ valor_adicionais = 0.0
 
 if escolha_tamanho != "Não vou montar um agora":
     preco_base_monte = tamanhos[escolha_tamanho]
-    
-    st.write("✨ **Escolha 3 Acompanhamentos Grátis:**")
-    itens_gratis = ["Leite em Pó", "Granola", "Paçoca", "Banana", "Leite Condensado", "Confeti"]
-    selecionados_gratis = st.multiselect("Itens grátis:", itens_gratis)
-    
-    st.write("🍫 **Adicionais Extras (Opcional):**")
+    itens_gratis = ["Leite em Pó", "Granola", "Paçoca", "Banana", "Leite Condensado"]
+    selecionados_gratis = st.multiselect("Grátis (Até 3):", itens_gratis)
     adicionais = {"Morango 🍓": 4.00, "Nutella 🍫": 6.00, "Creme de Ninho 🥛": 5.00}
-    
-    col_a, col_b = st.columns(2)
-    for i, (item, preco) in enumerate(adicionais.items()):
-        target_col = col_a if i % 2 == 0 else col_b
-        if target_col.checkbox(f"{item} (+R${preco:.2f})"):
+    for item, preco in adicionais.items():
+        if st.checkbox(f"{item} (+R${preco:.2f})"):
             selecionados_pagos.append(item)
             valor_adicionais += preco
 
-# --- SEÇÃO 3: FINALIZAÇÃO ---
-st.markdown('<div class="section-header">📍 3. ENTREGA E PAGAMENTO</div>', unsafe_allow_html=True)
+# --- SEÇÃO 3: CADASTRO E ENTREGA ---
+st.markdown('<div class="section-header">📍 3. SEUS DADOS</div>', unsafe_allow_html=True)
 
-nome = st.text_input("Seu Nome:")
-endereco = st.text_area("Endereço Completo:")
-pagamento = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
+# Tenta recuperar o que o cliente digitou antes para não repetir
+nome = st.text_input("Nome:", value=st.session_state.nome_cliente)
+endereco = st.text_area("Endereço Completo:", value=st.session_state.endereco_cliente)
+pagamento = st.selectbox("Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
-troco = ""
-if pagamento == "Dinheiro":
-    troco = st.text_input("Troco para quanto?")
+# Salva na memória do navegador para a próxima vez
+st.session_state.nome_cliente = nome
+st.session_state.endereco_cliente = endereco
 
-# Cálculo Final
+# Cálculo de Pedidos (Simulado por sessão)
+if 'total_pedidos_cliente' not in st.session_state:
+    st.session_state.total_pedidos_cliente = 0
+
+# --- FINALIZAÇÃO ---
 valor_total = valor_combos + preco_base_monte + valor_adicionais
+st.markdown(f"""<div style="background-color: #4B0082; padding: 20px; border-radius: 15px; text-align: center;">
+    <h2 style="margin:0; color: #25D366 !important;">Total: R$ {valor_total:.2f}</h2>
+    <p style="color: white; margin:0;">Este é seu pedido nº {st.session_state.total_pedidos_cliente + 1}</p>
+</div>""", unsafe_allow_html=True)
 
-st.markdown(f"""
-    <div style="background-color: #4B0082; padding: 20px; border-radius: 15px; text-align: center; margin-top: 20px;">
-        <h3 style="margin:0; color: white !important;">Total do Pedido</h3>
-        <h2 style="margin:0; color: #25D366 !important;">R$ {valor_total:.2f}</h2>
-    </div>
-    <br>
-""", unsafe_allow_html=True)
-
-if st.button("🚀 FINALIZAR PEDIDO NO WHATSAPP"):
+if st.button("🚀 FINALIZAR E SALVAR DADOS"):
     if not nome or not endereco:
-        st.error("⚠️ Preencha o nome e o endereço!")
+        st.error("⚠️ Preencha nome e endereço!")
     elif valor_total == 0:
-        st.warning("⚠️ Seu carrinho está vazio!")
+        st.warning("⚠️ Carrinho vazio!")
     else:
+        # Aumenta o contador de pedidos
+        st.session_state.total_pedidos_cliente += 1
+        
         resumo = ""
         for item in escolhidos: resumo += f"• {item}\n"
         if escolha_tamanho != "Não vou montar um agora":
-            resumo += f"• Monte seu {escolha_tamanho}\n  Grátis: {', '.join(selecionados_gratis)}\n  Extras: {', '.join(selecionados_pagos)}\n"
+            resumo += f"• Monte seu {escolha_tamanho}\n"
 
         msg = (
-            f"🍧 *PEDIDO - JUBILU DELIVERY*\n\n"
+            f"🍧 *JUBILU DELIVERY - PEDIDO #{st.session_state.total_pedidos_cliente}*\n\n"
             f"👤 *Cliente:* {nome}\n"
             f"📍 *Endereço:* {endereco}\n"
-            f"💳 *Pagamento:* {pagamento} {'(Troco: ' + troco + ')' if troco else ''}\n"
+            f"💳 *Pagamento:* {pagamento}\n"
             f"---------------------------\n"
             f"{resumo}"
-            f"---------------------------\n"
-            f"💰 *VALOR TOTAL: R$ {valor_total:.2f}*"
+            f"💰 *TOTAL: R$ {valor_total:.2f}*"
         )
         
-        meu_zap = "5537991031933" 
+        # Seu número de Nova Serrana
+        meu_zap = "5537991031933"
         link = f"https://wa.me/{meu_zap}?text={urllib.parse.quote(msg)}"
         st.markdown(f'<meta http-equiv="refresh" content="0;URL={link}">', unsafe_allow_html=True)
