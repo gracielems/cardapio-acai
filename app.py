@@ -4,110 +4,106 @@ import urllib.parse
 # Configurações de Página
 st.set_page_config(page_title="Forever Açaí", page_icon="🍧", layout="centered")
 
-# Estilização Profissional (CSS)
+# Estilização para corrigir o erro do Modo Escuro e melhorar o visual
 st.markdown("""
     <style>
-    .stApp { background-color: #fcfaff; }
-    .main-title { color: #4B0082; text-align: center; font-size: 42px; font-weight: bold; margin-bottom: 5px; }
+    /* Força o fundo claro e texto escuro em tudo */
+    .stApp { background-color: #ffffff; color: #31333F; }
+    
+    /* Garante que títulos e textos fiquem visíveis */
+    h1, h2, h3, p, span, label { color: #31333F !important; }
+    
+    .main-title { color: #4B0082 !important; text-align: center; font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+    
     .section-header { 
         background-color: #4B0082; 
-        color: white; 
-        padding: 12px; 
+        color: white !important; 
+        padding: 10px; 
         border-radius: 8px; 
-        margin-top: 25px; 
+        margin-top: 20px; 
         margin-bottom: 15px;
         font-weight: bold;
         text-align: center;
     }
-    /* Estilo para os cards de produtos */
-    .product-box {
-        background-color: white;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        margin-bottom: 10px;
-        border: 1px solid #eee;
+
+    /* Estilo dos campos de texto e caixas de seleção */
+    .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+        color: #31333F !important;
+        background-color: #f0f2f6 !important;
     }
+    
+    /* Botão Principal */
     .stButton>button { 
         width: 100%; 
         background-color: #25D366; 
-        color: white; 
-        border-radius: 30px; 
+        color: white !important; 
+        border-radius: 25px; 
         font-weight: bold; 
-        height: 4em; 
+        height: 3.5em; 
         border: none;
-        font-size: 18px;
-        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
     }
-    .stButton>button:hover {
-        background-color: #128C7E;
-        color: white;
-    }
+    
+    /* Remove a margem do topo para mobile */
+    .block-container { padding-top: 2rem; }
     </style>
     """, unsafe_allow_html=True)
 
 # Título Principal
 st.markdown('<div class="main-title">🍧 Forever Açaí</div>', unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 18px;'>Monte seu copo ou escolha nossas combinações especiais!</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-weight: bold;'>O melhor de Nova Serrana direto na sua casa!</p>", unsafe_allow_html=True)
 
 # --- SEÇÃO 1: COPOS MONTADOS ---
-st.markdown('<div class="section-header">🔥 NOSSOS COMBOS MAIS PEDIDOS</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">🔥 COMBOS MAIS PEDIDOS</div>', unsafe_allow_html=True)
 
 copos_prontos = {
-    "Açaí Laka Oreo (500ml)": {"preco": 28.00, "desc": "Capa de Laka Oreo, Oreo crocante, leite em pó e muito açaí."},
-    "Clássico com Morango (500ml)": {"preco": 27.00, "desc": "Morangos frescos selecionados, leite em pó e leite condensado."},
-    "Açaí Sensação (700ml)": {"preco": 29.99, "desc": "Bombom Sonho de Valsa picado, banana fatiada e calda de morango."},
-    "Açaí Nutella Premium (500ml)": {"preco": 34.00, "desc": "Muita Nutella original, morango e leite em pó ninho."}
+    "Açaí Laka Oreo (500ml)": {"preco": 28.00, "desc": "Capa de Laka Oreo, Oreo crocante, leite em pó e açaí."},
+    "Clássico com Morango (500ml)": {"preco": 27.00, "desc": "Morangos frescos, leite em pó e leite condensado."},
+    "Açaí Sensação (700ml)": {"preco": 29.99, "desc": "Bombom Sonho de Valsa, banana e calda de morango."},
+    "Açaí Nutella Premium (500ml)": {"preco": 34.00, "desc": "Nutella original, morango e leite em pó ninho."}
 }
 
 selecao_prontos = []
 for nome, info in copos_prontos.items():
-    with st.container():
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            if st.checkbox(f"**{nome}**", key=nome):
-                selecao_prontos.append((nome, info['preco']))
-            st.caption(info['desc'])
-        with col2:
-            st.markdown(f"**R$ {info['preco']:.2f}**")
-        st.markdown("---")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        if st.checkbox(f"**{nome}**", key=nome):
+            selecao_prontos.append((nome, info['preco']))
+        st.write(f"<small>{info['desc']}</small>", unsafe_allow_html=True)
+    with col2:
+        st.write(f"**R$ {info['preco']:.2f}**")
+    st.markdown("---")
 
 # --- SEÇÃO 2: MONTE DO SEU JEITO ---
-st.markdown('<div class="section-header">🛠️ MONTE SEU COPO (PERSONALIZADO)</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">🛠️ MONTE SEU COPO</div>', unsafe_allow_html=True)
 
 tamanhos = {"500ml": 18.00, "700ml": 23.00, "1 Litro": 32.00}
-escolha_tamanho = st.selectbox("Escolha o tamanho para montar:", ["Nenhum (Vou de Combo)"] + list(tamanhos.keys()))
+escolha_tamanho = st.selectbox("Escolha o tamanho:", ["Vou de Combo"] + list(tamanhos.keys()))
 
 preco_base_monte = 0.0
 selecionados_gratis = []
 selecionados_pagos = []
 valor_adicionais = 0.0
 
-if "Nenhum" not in escolha_tamanho:
+if escolha_tamanho != "Vou de Combo":
     preco_base_monte = tamanhos[escolha_tamanho]
     
-    st.markdown("#### 🍓 Escolha 3 Acompanhamentos Grátis")
-    itens_gratis = ["Leite em Pó", "Granola", "Paçoca", "Banana", "Leite Condensado", "Farinha Láctea", "Confeti"]
-    selecionados_gratis = st.multiselect("Selecione até 3:", itens_gratis)
+    st.write("**Inclusos (Até 3):**")
+    itens_gratis = ["Leite em Pó", "Granola", "Paçoca", "Banana", "Leite Condensado", "Confeti"]
+    selecionados_gratis = st.multiselect("Selecione os grátis:", itens_gratis)
     
-    st.markdown("#### 🍫 Adicionais Extras (Opcional)")
-    adicionais = {"Morango 🍓": 4.00, "Nutella 🍫": 6.00, "Creme de Ninho 🥛": 5.00, "Mousse de Maracujá 🟡": 3.50}
-    
-    col_a, col_b = st.columns(2)
-    for i, (item, preco) in enumerate(adicionais.items()):
-        target_col = col_a if i % 2 == 0 else col_b
-        if target_col.checkbox(f"{item} (+R${preco:.2f})", key=f"add_{item}"):
+    st.write("**Adicionais (+R$):**")
+    adicionais = {"Morango 🍓": 4.00, "Nutella 🍫": 6.00, "Creme de Ninho 🥛": 5.00}
+    for item, preco in adicionais.items():
+        if st.checkbox(f"{item} (+R${preco:.2f})"):
             selecionados_pagos.append(item)
             valor_adicionais += preco
 
 # --- SEÇÃO 3: FINALIZAÇÃO ---
-st.markdown('<div class="section-header">📍 DADOS DE ENTREGA</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">📍 ENTREGA</div>', unsafe_allow_html=True)
 
-col_n, col_p = st.columns(2)
-nome = col_n.text_input("Seu Nome:")
-pagamento = col_p.selectbox("Pagamento:", ["Pix", "Cartão", "Dinheiro"])
-
-endereco = st.text_area("Endereço (Rua, Número, Bairro e Referência):")
+nome = st.text_input("Seu Nome:")
+endereco = st.text_area("Endereço e Referência:")
+pagamento = st.selectbox("Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
 troco = ""
 if pagamento == "Dinheiro":
@@ -116,40 +112,33 @@ if pagamento == "Dinheiro":
 # Cálculo Final
 valor_total = sum(p for n, p in selecao_prontos) + preco_base_monte + valor_adicionais
 
-st.markdown(f"<div style='background-color: #eee; padding: 20px; border-radius: 10px; text-align: center; margin-top: 20px;'>"
-            f"<h2 style='margin:0; color: #4B0082;'>Total do Pedido: R$ {valor_total:.2f}</h2>"
+st.markdown(f"<div style='background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center;'>"
+            f"<h2 style='margin:0; color: #4B0082;'>Total: R$ {valor_total:.2f}</h2>"
             f"</div>", unsafe_allow_html=True)
 
-if st.button("✅ FINALIZAR E ENVIAR PEDIDO"):
+if st.button("✅ FINALIZAR NO WHATSAPP"):
     if not nome or not endereco:
-        st.error("⚠️ Por favor, preencha o Nome e o Endereço para entrega.")
+        st.error("Preencha o nome e o endereço!")
     elif valor_total == 0:
-        st.warning("⚠️ Seu carrinho está vazio! Selecione um item antes.")
+        st.warning("Carrinho vazio!")
     else:
-        # Formatação para o WhatsApp
-        itens_texto = ""
-        for n, p in selecao_prontos:
-            itens_texto += f"• {n} (R$ {p:.2f})\n"
-        
-        if "Nenhum" not in escolha_tamanho:
-            itens_texto += f"• Monte seu Açaí {escolha_tamanho}\n"
-            if selecionados_gratis: itens_texto += f"   - Inclusos: {', '.join(selecionados_gratis)}\n"
-            if selecionados_pagos: itens_texto += f"   - Extras: {', '.join(selecionados_pagos)}\n"
+        # Texto para o Zap
+        resumo = ""
+        for n, p in selecao_prontos: resumo += f"• {n}\n"
+        if escolha_tamanho != "Vou de Combo":
+            resumo += f"• Monte seu {escolha_tamanho}\n  Grátis: {', '.join(selecionados_gratis)}\n  Extras: {', '.join(selecionados_pagos)}\n"
 
         msg = (
             f"🍧 *PEDIDO - FOREVER AÇAÍ*\n\n"
             f"👤 *Cliente:* {nome}\n"
             f"📍 *Endereço:* {endereco}\n"
-            f"💳 *Pagamento:* {pagamento} {'(Troco p/ ' + troco + ')' if troco else ''}\n"
+            f"💳 *Pagamento:* {pagamento} {'(Troco: ' + troco + ')' if troco else ''}\n"
             f"---------------------------\n"
-            f"{itens_texto}"
+            f"{resumo}"
             f"---------------------------\n"
             f"💰 *VALOR TOTAL: R$ {valor_total:.2f}*"
         )
         
-        # SEU NÚMERO CONFIGURADO
         meu_zap = "5537991031933" 
         link = f"https://wa.me/{meu_zap}?text={urllib.parse.quote(msg)}"
-        
-        st.success("Tudo pronto! Redirecionando para o WhatsApp...")
         st.markdown(f'<meta http-equiv="refresh" content="0;URL={link}">', unsafe_allow_html=True)
