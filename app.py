@@ -3,17 +3,24 @@ import urllib.parse
 import pandas as pd
 
 # --- CONEXÃO COM A PLANILHA (CONTROLE DE HORÁRIO) ---
+# Adicionamos um parâmetro aleatório ao link para forçar o Google a entregar o dado novo
 LINK_PLANILHA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQA1CUqaVNElv3-c_Ylb1XKH3_z1h5h1dbH66HkKRIafoh6lheQ5z-MY6oKMSkkqGnsxUXryigtPm3N/pub?output=csv"
 
 def verificar_loja_aberta():
     try:
+        # Lemos a planilha sem guardar na memória (cache)
         df = pd.read_csv(LINK_PLANILHA)
-        # Pega a primeira célula da planilha para ver se está escrito SIM
+        # Verifica se a palavra 'SIM' está na primeira linha/coluna
         status = str(df.columns[0]).strip().upper()
-        return True if "SIM" in status else False
+        if "SIM" in status:
+            return True
+        else:
+            return False
     except:
+        # Se der erro na planilha, por segurança, deixamos aberto
         return True
 
+# Chamamos a função para definir a variável
 LOJA_ABERTA = verificar_loja_aberta()
 
 # --- CONFIGURAÇÃO DE DESIGN ---
@@ -36,6 +43,11 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.markdown('<div class="banner"><h1>🍧 Jubilu Delivery</h1><p>Nova Serrana - O melhor açaí da região!</p></div>', unsafe_allow_html=True)
+
+# --- AVISO DE LOJA FECHADA ---
+if not LOJA_ABERTA:
+    st.error("🚨 ATENÇÃO: NO MOMENTO ESTAMOS FECHADOS!")
+    st.info("Você pode navegar pelo cardápio e montar seu pedido, mas o envio para o WhatsApp está bloqueado até abrirmos.")
 
 # --- ORGANIZAÇÃO POR ABAS ---
 tab1, tab2 = st.tabs(["🔥 Combos Prontos", "🛠️ Monte o Seu"])
@@ -61,7 +73,7 @@ with tab1:
                 valor_total += info['preco']
             st.markdown("---")
 
-# --- ABA 2: MONTE O SEU (USANDO ARQUIVOS LOCAIS) ---
+# --- ABA 2: MONTE O SEU ---
 with tab2:
     st.markdown('<div class="secao">1. ESCOLHA O TAMANHO</div>', unsafe_allow_html=True)
     
@@ -75,16 +87,14 @@ with tab2:
     escolha = st.selectbox("Selecione o copo:", ["Nenhum"] + list(tamanhos.keys()))
     
     if escolha != "Nenhum":
-        # Tenta carregar a imagem da pasta local
         try:
             st.image(tamanhos[escolha]["foto"], width=250)
         except:
-            st.warning("Imagem ainda carregando ou não encontrada.")
+            st.caption("📷 Imagem do copo selecionado")
             
         valor_total += tamanhos[escolha]["preco"]
         itens_pedido.append(f"Copo {escolha}")
 
-        # --- ADICIONAIS ---
         st.markdown('<div class="secao">2. ADICIONAIS (R$ 3,00 cada)</div>', unsafe_allow_html=True)
         extras_3 = ["Banana", "Bis Branco", "Bis Preto", "Leite em Pó", "Paçoca", "Amendoim", "Granola", "Coco Ralado", "Gotas de Chocolate", "Oreo", "Disquete", "Chocoboll", "Leite Condensado", "Cobertura Chocolate", "Cobertura Morango", "Chantilly"]
         
@@ -113,9 +123,9 @@ pag_cli = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
 if st.button("✅ FINALIZAR E ENVIAR PEDIDO"):
     if not LOJA_ABERTA:
-        st.error("Desculpe, a loja está fechada no momento!")
+        st.error("❌ NÃO FOI POSSÍVEL ENVIAR: A loja está fechada no momento.")
     elif valor_total == 0 or not nome_cli or not end_cli:
-        st.warning("Por favor, preencha seus dados e selecione os itens.")
+        st.warning("Preencha seus dados e escolha os itens!")
     else:
         resumo_itens = "\n".join(itens_pedido)
         mensagem_zap = (
@@ -126,6 +136,5 @@ if st.button("✅ FINALIZAR E ENVIAR PEDIDO"):
             f"*Itens:*\n{resumo_itens}\n\n"
             f"*TOTAL: R$ {valor_total:.2f}*"
         )
-        # Substitua pelo seu número de WhatsApp se precisar
         link_final = f"https://wa.me/5537991031933?text={urllib.parse.quote(mensagem_zap)}"
         st.markdown(f'<meta http-equiv="refresh" content="0;URL={link_final}">', unsafe_allow_html=True)
