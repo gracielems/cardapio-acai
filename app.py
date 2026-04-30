@@ -16,7 +16,7 @@ def verificar_loja_aberta():
 LOJA_ABERTA = verificar_loja_aberta()
 
 # --- CONFIGURAÇÃO DE DESIGN ---
-st.set_page_config(page_title="Jubilu Açaí - Monte o Seu", page_icon="🍧")
+st.set_page_config(page_title="Jubilu Açaí", page_icon="🍧")
 
 st.markdown("""
     <style>
@@ -26,13 +26,9 @@ st.markdown("""
         padding: 25px; border-radius: 0px 0px 30px 30px;
         color: white !important; text-align: center; margin: -60px -20px 20px -20px;
     }
-    .secao { 
-        color: #4B0082; font-weight: bold; border-bottom: 2px solid #4B0082;
-        padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px;
-    }
-    .total-card {
-        background-color: #4B0082; padding: 20px; border-radius: 15px;
-        text-align: center; color: white !important;
+    .produto-card {
+        border: 1px solid #eee; padding: 10px; border-radius: 15px;
+        margin-bottom: 10px; background-color: #fcfcfc;
     }
     .stButton>button { 
         width: 100%; background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
@@ -42,107 +38,102 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- TOPO ---
-st.markdown('<div class="banner"><h1>🍧 Jubilu Delivery</h1><p>Nova Serrana - O açaí do seu jeito!</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="banner"><h1>🍧 Jubilu Delivery</h1><p>Nova Serrana - O melhor açaí da região!</p></div>', unsafe_allow_html=True)
 
 if not LOJA_ABERTA:
-    st.error("🚫 Estamos fechados agora. Você pode simular seu pedido, mas não conseguirá enviar para o WhatsApp.")
+    st.error("🚨 Estamos FECHADOS agora. Você pode olhar o cardápio, mas não conseguirá enviar o pedido.")
 
-# --- PASSO 1: TAMANHOS ---
-st.markdown('<div class="secao">1. ESCOLHA O TAMANHO DO COPO</div>', unsafe_allow_html=True)
-tamanhos = {
-    "Copo 300ml": 13.00,
-    "Copo 500ml": 18.00,
-    "Copo 700ml": 23.00,
-    "Copo 1 Litro": 32.00
-}
-escolha_tamanho = st.selectbox("Selecione o tamanho:", list(tamanhos.keys()))
-preco_base = tamanhos[escolha_tamanho]
-
-# --- PASSO 2: ADICIONAIS ---
-st.markdown('<div class="secao">2. ADICIONAIS (Monte como quiser)</div>', unsafe_allow_html=True)
-
-# Lista de R$ 3,00
-extras_3 = [
-    "Banana", "Bis Branco", "Bis Preto", "Leite em Pó", "Paçoca", "Amendoim", 
-    "Granola", "Coco Ralado", "Gotas de Chocolate", "Oreo", "Disquete", 
-    "Chocoboll", "Leite Condensado", "Cobertura de Chocolate", 
-    "Cobertura de Morango", "Chantilly"
-]
-
-# Lista de R$ 6,00 e R$ 8,00
-extras_premium = {
-    "Creme de Avelã": 6.00,
-    "Creme Laka Oreo": 6.00,
-    "Nutella": 8.00
-}
-
-selecionados = []
-valor_adicionais = 0.0
-
-st.write("**Itens de R$ 3,00 cada:**")
-# Organizando em colunas para o celular
-col1, col2 = st.columns(2)
-for i, item in enumerate(extras_3):
-    col_alvo = col1 if i % 2 == 0 else col2
-    if col_alvo.checkbox(item):
-        selecionados.append(item)
-        valor_adicionais += 3.00
-
-st.write("**Premium:**")
-for item, preco in extras_premium.items():
-    if st.checkbox(f"{item} (+R$ {preco:.2f})"):
-        selecionados.append(item)
-        valor_adicionais += preco
-
-# --- RESUMO E DADOS ---
-total_final = preco_base + valor_adicionais
-
-st.markdown(f"""
-    <div class="total-card">
-        <h3 style="margin:0;">Total do seu Pedido</h3>
-        <h1 style="margin:0; color: #25D366 !important;">R$ {total_final:.2f}</h1>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown('<div class="secao">3. ENTREGA E PAGAMENTO</div>', unsafe_allow_html=True)
-
-# Recuperação de memória do cliente
+# --- MEMÓRIA DO CLIENTE ---
 if 'nome_salvo' not in st.session_state: st.session_state.nome_salvo = ""
 if 'end_salvo' not in st.session_state: st.session_state.end_salvo = ""
-if 'pedidos_count' not in st.session_state: st.session_state.pedidos_count = 0
+
+# --- ORGANIZAÇÃO POR ABAS ---
+tab1, tab2 = st.tabs(["🔥 Combos Prontos", "🛠️ Monte o Seu"])
+
+itens_pedido = []
+valor_total = 0.0
+
+# --- ABA 1: COMBOS PRONTOS ---
+with tab1:
+    st.markdown("### Escolha um de nossos favoritos:")
+    combos = {
+        "🍫 Laka Oreo (500ml)": {"preco": 28.00, "desc": "Capa de Laka Oreo, Oreo crocante e leite em pó."},
+        "🍓 Clássico Morango (500ml)": {"preco": 27.00, "desc": "Morangos, leite em pó e leite condensado."},
+        "⭐ Nutella Premium (500ml)": {"preco": 34.00, "desc": "Nutella original, morangos e leite Ninho."}
+    }
+    
+    for nome, info in combos.items():
+        with st.container():
+            st.markdown(f"**{nome}** - R$ {info['preco']:.2f}")
+            st.caption(info['desc'])
+            if st.checkbox("Selecionar Combo", key=f"combo_{nome}"):
+                itens_pedido.append(f"Combo: {nome}")
+                valor_total += info['preco']
+            st.markdown("---")
+
+# --- ABA 2: MONTE O SEU ---
+with tab2:
+    st.markdown("### Monte do seu jeito:")
+    
+    # Tamanhos
+    tamanhos = {"300ml": 13.00, "500ml": 18.00, "700ml": 23.00, "1 Litro": 32.00}
+    tamanho_escolhido = st.selectbox("1. Escolha o tamanho:", ["Nenhum"] + list(tamanhos.keys()))
+    
+    if tamanho_escolhido != "Nenhum":
+        itens_pedido.append(f"Copo personalizado ({tamanho_escolhido})")
+        valor_total += tamanhos[tamanho_escolhido]
+        
+        # Adicionais R$ 3,00
+        st.markdown("**2. Adicionais (R$ 3,00 cada):**")
+        extras_3 = ["Banana", "Bis Branco", "Bis Preto", "Leite em Pó", "Paçoca", "Amendoim", "Granola", "Coco Ralado", "Gotas de Chocolate", "Oreo", "Disquete", "Chocoboll", "Leite Condensado", "Cobertura Chocolate", "Cobertura Morango", "Chantilly"]
+        
+        c1, c2 = st.columns(2)
+        for i, item in enumerate(extras_3):
+            col = c1 if i % 2 == 0 else c2
+            if col.checkbox(item, key=f"add_{item}"):
+                itens_pedido.append(f"Add: {item}")
+                valor_total += 3.00
+                
+        # Adicionais Premium
+        st.markdown("**3. Adicionais Premium:**")
+        if st.checkbox("Creme de Avelã (+R$ 6,00)"):
+            itens_pedido.append("Add: Creme de Avelã")
+            valor_total += 6.00
+        if st.checkbox("Creme Laka Oreo (+R$ 6,00)"):
+            itens_pedido.append("Add: Creme Laka Oreo")
+            valor_total += 6.00
+        if st.checkbox("Nutella Original (+R$ 8,00)"):
+            itens_pedido.append("Add: Nutella")
+            valor_total += 8.00
+
+# --- FINALIZAÇÃO (Sempre visível no final) ---
+st.markdown("---")
+st.markdown(f"## Total do Pedido: R$ {valor_total:.2f}")
 
 nome = st.text_input("Seu Nome:", value=st.session_state.nome_salvo)
-endereco = st.text_area("Endereço Completo:", value=st.session_state.end_salvo)
+endereco = st.text_area("Endereço de Entrega:", value=st.session_state.end_salvo)
 pagamento = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
-# Salva na memória
-st.session_state.nome_salvo = nome
-st.session_state.end_salvo = endereco
+st.session_state.nome_salvo, st.session_state.end_salvo = nome, endereco
 
-st.success("🚚 Frete Grátis em Nova Serrana!")
-
-# --- BOTÃO FINALIZAR ---
-if st.button("🚀 ENVIAR PEDIDO"):
+if st.button("✅ ENVIAR PEDIDO PARA O WHATSAPP"):
     if not LOJA_ABERTA:
-        st.error("Loja fechada! Não podemos receber pedidos agora.")
+        st.error("Estamos fechados agora!")
+    elif valor_total == 0:
+        st.warning("Seu carrinho está vazio!")
     elif not nome or not endereco:
-        st.warning("Preencha seu nome e endereço!")
+        st.warning("Preencha nome e endereço!")
     else:
-        st.session_state.pedidos_count += 1
-        lista_final = ", ".join(selecionados) if selecionados else "Sem adicionais"
-        
+        resumo_itens = "\n".join(itens_pedido)
         msg = (
             f"🍧 *JUBILU AÇAÍ - NOVO PEDIDO*\n\n"
             f"👤 *Cliente:* {nome}\n"
             f"📍 *Endereço:* {endereco}\n"
             f"💳 *Pagamento:* {pagamento}\n"
             f"---------------------------\n"
-            f"📦 *Tamanho:* {escolha_tamanho}\n"
-            f"✨ *Adicionais:* {lista_final}\n"
+            f"{resumo_itens}\n"
             f"---------------------------\n"
-            f"💰 *TOTAL: R$ {total_final:.2f}*\n"
-            f"🚀 *Este é o pedido nº {st.session_state.pedidos_count} deste cliente!*"
+            f"💰 *TOTAL: R$ {valor_total:.2f}*"
         )
-        
         link = f"https://wa.me/5537991031933?text={urllib.parse.quote(msg)}"
         st.markdown(f'<meta http-equiv="refresh" content="0;URL={link}">', unsafe_allow_html=True)
