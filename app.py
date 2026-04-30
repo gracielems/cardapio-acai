@@ -8,6 +8,7 @@ LINK_PLANILHA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQA1CUqaVNElv3-
 def verificar_loja_aberta():
     try:
         df = pd.read_csv(LINK_PLANILHA)
+        # Pega a primeira célula da planilha para ver se está escrito SIM
         status = str(df.columns[0]).strip().upper()
         return True if "SIM" in status else False
     except:
@@ -60,35 +61,26 @@ with tab1:
                 valor_total += info['preco']
             st.markdown("---")
 
-# --- ABA 2: MONTE O SEU (COM AS SUAS FOTOS WEBP) ---
+# --- ABA 2: MONTE O SEU (USANDO ARQUIVOS LOCAIS) ---
 with tab2:
     st.markdown('<div class="secao">1. ESCOLHA O TAMANHO</div>', unsafe_allow_html=True)
     
-    # ⚠️ MUDE A PALAVRA 'SEU_USUARIO' PARA O SEU NOME DO GITHUB ⚠️
     tamanhos = {
-        "300ml": {
-            "preco": 13.00, 
-            "foto": "https://raw.githubusercontent.com/SEU_USUARIO/cardapio-acai/main/copo300.webp"
-        },
-        "500ml": {
-            "preco": 18.00, 
-            "foto": "https://raw.githubusercontent.com/SEU_USUARIO/cardapio-acai/main/copo500.webp"
-        },
-        "700ml": {
-            "preco": 23.00, 
-            "foto": "https://raw.githubusercontent.com/SEU_USUARIO/cardapio-acai/main/copo700.webp"
-        },
-        "1 Litro": {
-            "preco": 32.00, 
-            "foto": "https://raw.githubusercontent.com/SEU_USUARIO/cardapio-acai/main/copo1l.webp"
-        }
+        "300ml": {"preco": 13.00, "foto": "copo300.webp"},
+        "500ml": {"preco": 18.00, "foto": "copo500.webp"},
+        "700ml": {"preco": 23.00, "foto": "copo700.webp"},
+        "1 Litro": {"preco": 32.00, "foto": "copo1l.webp"}
     }
     
     escolha = st.selectbox("Selecione o copo:", ["Nenhum"] + list(tamanhos.keys()))
     
     if escolha != "Nenhum":
-        # Mostra a foto do copo selecionado
-        st.image(tamanhos[escolha]["foto"], width=250)
+        # Tenta carregar a imagem da pasta local
+        try:
+            st.image(tamanhos[escolha]["foto"], width=250)
+        except:
+            st.warning("Imagem ainda carregando ou não encontrada.")
+            
         valor_total += tamanhos[escolha]["preco"]
         itens_pedido.append(f"Copo {escolha}")
 
@@ -113,19 +105,27 @@ with tab2:
 
 # --- FINALIZAÇÃO ---
 st.markdown("---")
-st.markdown(f"### Total: R$ {valor_total:.2f}")
+st.markdown(f"### Total do Pedido: R$ {valor_total:.2f}")
 
-nome = st.text_input("Seu Nome:")
-end = st.text_area("Endereço:")
-pagamento = st.selectbox("Pagamento:", ["Pix", "Cartão", "Dinheiro"])
+nome_cli = st.text_input("Seu Nome:")
+end_cli = st.text_area("Endereço de Entrega:")
+pag_cli = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
-if st.button("✅ ENVIAR PEDIDO"):
+if st.button("✅ FINALIZAR E ENVIAR PEDIDO"):
     if not LOJA_ABERTA:
-        st.error("Loja fechada!")
-    elif valor_total == 0 or not nome or not end:
-        st.warning("Preencha todos os campos e escolha seus itens!")
+        st.error("Desculpe, a loja está fechada no momento!")
+    elif valor_total == 0 or not nome_cli or not end_cli:
+        st.warning("Por favor, preencha seus dados e selecione os itens.")
     else:
-        resumo = "\n".join(itens_pedido)
-        msg = f"🍧 *PEDIDO JUBILU*\n\n*Cliente:* {nome}\n*Endereço:* {end}\n*Pagamento:* {pagamento}\n\n*Itens:*\n{resumo}\n\n*TOTAL: R$ {valor_total:.2f}*"
-        link = f"https://wa.me/5537991031933?text={urllib.parse.quote(msg)}"
-        st.markdown(f'<meta http-equiv="refresh" content="0;URL={link}">', unsafe_allow_html=True)
+        resumo_itens = "\n".join(itens_pedido)
+        mensagem_zap = (
+            f"🍧 *NOVO PEDIDO JUBILU*\n\n"
+            f"*Cliente:* {nome_cli}\n"
+            f"*Endereço:* {end_cli}\n"
+            f"*Pagamento:* {pag_cli}\n\n"
+            f"*Itens:*\n{resumo_itens}\n\n"
+            f"*TOTAL: R$ {valor_total:.2f}*"
+        )
+        # Substitua pelo seu número de WhatsApp se precisar
+        link_final = f"https://wa.me/5537991031933?text={urllib.parse.quote(mensagem_zap)}"
+        st.markdown(f'<meta http-equiv="refresh" content="0;URL={link_final}">', unsafe_allow_html=True)
