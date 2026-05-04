@@ -1,6 +1,6 @@
 import streamlit as st
 import urllib.parse
-import pandas as pd
+import pd as pd
 import os
 
 # --- ARQUIVO DE BANCO DE DADOS LOCAL (FIDELIDADE) ---
@@ -24,19 +24,16 @@ def atualizar_pedido_cliente(nome, ganhou_brinde):
 
     if nome in df['nome'].values:
         if ganhou_brinde:
-            # Se ele ganhou o brinde, a contagem reseta para 0
             df.loc[df['nome'] == nome, 'pedidos'] = 0
         else:
-            # Se não ganhou, soma +1
             df.loc[df['nome'] == nome, 'pedidos'] += 1
     else:
-        # Primeiro pedido do cliente no sistema
         nova_linha = pd.DataFrame({'nome': [nome], 'pedidos': [1]})
         df = pd.concat([df, nova_linha], ignore_index=True)
     
     df.to_csv(ARQUIVO_CLIENTES, index=False)
 
-# --- CONEXÃO COM A PLANILHA (CONTROLE DE HORÁRIO) ---
+# --- CONEXÃO COM A PLANILHA (HORÁRIO) ---
 LINK_PLANILHA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQA1CUqaVNElv3-c_Ylb1XKH3_z1h5h1dbH66HkKRIafoh6lheQ5z-MY6oKMSkkqGnsxUXryigtPm3N/pub?output=csv"
 
 def verificar_loja_aberta():
@@ -45,7 +42,7 @@ def verificar_loja_aberta():
         status = str(df.columns[0]).strip().upper()
         return "SIM" in status
     except:
-        return True # Segurança: se a planilha falhar, não bloqueia venda
+        return True
 
 LOJA_ABERTA = verificar_loja_aberta()
 
@@ -56,6 +53,11 @@ st.markdown("""
     <style>
     .stApp { background-color: #ffffff; }
     .secao { color: #4B0082; font-weight: bold; border-bottom: 2px solid #4B0082; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; }
+    .valor-total { 
+        position: fixed; bottom: 20px; right: 20px; background-color: #4B0082; 
+        color: white; padding: 15px; border-radius: 50px; font-weight: bold; 
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.3); z-index: 1000;
+    }
     .stButton>button { 
         width: 100%; background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
         color: white !important; border-radius: 15px; font-weight: bold; height: 3.5em; border: none;
@@ -63,130 +65,91 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- TOPO (IMAGEM LOGO) ---
+# --- LOGO ---
 if os.path.exists("logo3d.png"):
     st.image("logo3d.png", use_container_width=True)
-elif os.path.exists("logo3d.jpg"):
-    st.image("logo3d.jpg", use_container_width=True)
-elif os.path.exists("logo3d.jpg.png"):
-    st.image("logo3d.jpg.png", use_container_width=True)
 else:
     st.title("🍧 Jubileu Açaí")
 
-# --- ESTADO DO PEDIDO ---
+# --- INICIALIZAÇÃO DE VARIÁVEIS DE PEDIDO ---
 itens_pedido = []
 valor_total = 0.0
 
-# --- ABAS DO CARDÁPIO ---
 tab1, tab2 = st.tabs(["🔥 Combos Prontos", "Monte o Seu"])
 
 with tab1:
-    st.markdown("### Escolha um de nossos favoritos:")
+    st.markdown("### Nossos Favoritos")
     combos = {
-        "🍫 Laka Oreo (500ml)": {"preco": 28.00, "desc": "Capa de Laka Oreo, Oreo crocante e leite em pó."},
-        "🍓 Clássico Morango (500ml)": {"preco": 27.00, "desc": "Morangos, leite em pó e leite condensado."},
-        "⭐ Nutella Premium (500ml)": {"preco": 34.00, "desc": "Nutella original, morangos e leite Ninho."}
+        "🍫 Laka Oreo (500ml)": {"preco": 28.0, "desc": "Capa de Laka Oreo, Oreo crocante e leite em pó."},
+        "🍓 Clássico Morango (500ml)": {"preco": 27.0, "desc": "Morangos, leite em pó e leite condensado."},
+        "⭐ Nutella Premium (500ml)": {"preco": 34.0, "desc": "Nutella original, morangos e leite Ninho."}
     }
     for nome, info in combos.items():
-        st.markdown(f"**{nome}** - R$ {info['preco']:.2f}")
-        st.caption(info['desc'])
-        if st.checkbox("Selecionar Combo", key=f"c_{nome}"):
+        if st.checkbox(f"{nome} - R$ {info['preco']:.2f}", key=f"c_{nome}"):
             itens_pedido.append(f"Combo: {nome}")
             valor_total += info['preco']
+        st.caption(info['desc'])
         st.markdown("---")
 
 with tab2:
-    col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
-    with col_img2:
-        if os.path.exists("download (1).jpg"):
-            st.image("download (1).jpg", width=180)
-    
-    st.markdown('<div style="text-align: center; color: #4B0082; font-weight: bold; font-size: 22px;">🍧 Monte o Seu</div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="secao">1. ESCOLHA O TAMANHO</div>', unsafe_allow_html=True)
-    tamanhos = {
-        "300ml": 13.00, "500ml": 18.00, "700ml": 23.00, "1 Litro": 32.00
-    }
-    
-    escolha = st.selectbox("Selecione o copo:", options=list(tamanhos.keys()), index=None, placeholder="Clique para escolher o tamanho...")
+    st.markdown('<div class="secao">1. TAMANHO</div>', unsafe_allow_html=True)
+    tamanhos = {"300ml": 13.0, "500ml": 18.0, "700ml": 23.0, "1 Litro": 32.0}
+    escolha = st.selectbox("Escolha seu copo:", options=list(tamanhos.keys()), index=None, placeholder="Clique aqui...")
     
     if escolha:
         valor_total += tamanhos[escolha]
         itens_pedido.append(f"Copo {escolha}")
 
         st.markdown('<div class="secao">2. ADICIONAIS (R$ 3,00 cada)</div>', unsafe_allow_html=True)
-        extras_3 = ["Banana", "Bis Branco", "Bis Preto", "Leite em Pó", "Paçoca", "Amendoim", "Granola", "Coco Ralado", "Gotas de Chocolate", "Oreo", "Disquete", "Chocoboll", "Leite Condensado", "Cobertura Chocolate", "Cobertura Morango", "Chantilly"]
+        extras = ["Banana", "Bis", "Leite em Pó", "Paçoca", "Granola", "Oreo", "Leite Condensado", "Nutella", "M&Ms"]
         
         c1, c2 = st.columns(2)
-        for i, item in enumerate(extras_3):
+        for i, item in enumerate(extras):
             col = c1 if i % 2 == 0 else c2
             if col.checkbox(item, key=f"add_{item}"):
                 itens_pedido.append(f"Add: {item}")
-                valor_total += 3.00
+                valor_total += 3.0
+
+# --- EXIBIÇÃO DO TOTAL EM TEMPO REAL ---
+if valor_total > 0:
+    st.markdown(f"""
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #4B0082; margin-top: 20px;">
+            <h4 style="margin: 0; color: #4B0082;">🛒 Resumo do Pedido</h4>
+            <p style="margin: 5px 0;">{", ".join(itens_pedido)}</p>
+            <h3 style="margin: 0; color: #25D366;">Total: R$ {valor_total:.2f}</h3>
+        </div>
+    """, unsafe_allow_html=True)
 
 # --- FINALIZAÇÃO E FIDELIDADE ---
-st.markdown("---")
-nome_cli = st.text_input("Seu Nome (Para consultar fidelidade):")
+st.markdown('<div class="secao">DADOS DE ENTREGA</div>', unsafe_allow_html=True)
+nome_cli = st.text_input("Seu Nome:")
 
 ganhou_brinde = False
 if nome_cli:
-    qtd_pedidos = carregar_dados_cliente(nome_cli)
-    
-    # Se o histórico mostra 9 pedidos, este pedido agora é o 10º
-    if qtd_pedidos == 9:
+    qtd = carregar_dados_cliente(nome_cli)
+    if qtd == 9:
         ganhou_brinde = True
         st.markdown(f"""
-            <div style="background-color: #f3e5f5; border-left: 5px solid #4B0082; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
-                <h3 style="color: #4B0082; margin-top: 0;">🎁 PARABÉNS, {nome_cli.upper()}! 🥳</h3>
-                <p style="color: #333; font-size: 16px; line-height: 1.5;">
-                    Você acaba de completar seu <b>10º pedido</b> conosco!<br><br>
-                    <i>"Para nós, você é visto, é querido e sempre lembrado."</i><br><br>
-                    Mais do que um cliente, você faz parte da nossa história. Como forma de agradecimento por sua lealdade, 
-                    <b>você ganhou um Açaí de 300ml totalmente por nossa conta!</b>
-                </p>
+            <div style="background-color: #f3e5f5; border-left: 5px solid #4B0082; padding: 15px; border-radius: 10px;">
+                <p><b>🎁 PARABÉNS, {nome_cli.upper()}!</b><br>
+                "Você é visto e sempre lembrado." Por ser seu 10º pedido, <b>ganhou um Açaí 300ml de brinde!</b></p>
             </div>
         """, unsafe_allow_html=True)
     else:
-        faltam = 9 - qtd_pedidos
-        st.info(f"Faltam {faltam} pedidos para você ganhar um brinde especial! 💜")
+        st.info(f"Faltam {9-qtd} pedidos para seu brinde! 💜")
 
-end_cli = st.text_input("Endereço Completo:")
-pag_cli = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
+end_cli = st.text_input("Endereço:")
+pag_cli = st.selectbox("Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
-# --- BOTÃO FINAL ---
-if st.button("✅ FINALIZAR E MONTAR PEDIDO"):
+if st.button("✅ FINALIZAR NO WHATSAPP"):
     if not LOJA_ABERTA:
-        st.error("❌ DESCULPE, A LOJA ESTÁ FECHADA NO MOMENTO!")
-    elif valor_total == 0:
-        st.warning("Seu carrinho está vazio!")
-    elif not nome_cli or not end_cli:
-        st.warning("Por favor, preencha seu nome e endereço!")
+        st.error("Loja Fechada!")
+    elif valor_total == 0 or not nome_cli or not end_cli:
+        st.warning("Preencha tudo!")
     else:
-        # Salva o progresso e zera se ele ganhou o brinde
         atualizar_pedido_cliente(nome_cli, ganhou_brinde)
-        
         resumo = "\n".join(itens_pedido)
-        brinde_texto = "\n\n🎁 *BRINDE: 1 AÇAÍ 300ML RESGATADO!*" if ganhou_brinde else ""
-        
-        msg = (
-            f"🍧 *NOVO PEDIDO JUBILEU AÇAÍ*\n"
-            f"--------------------------\n"
-            f"*Cliente:* {nome_cli}\n"
-            f"*Endereço:* {end_cli}\n"
-            f"--------------------------\n"
-            f"*Itens:*\n{resumo}{brinde_texto}\n\n"
-            f"*Pagamento:* {pag_cli}\n"
-            f"*TOTAL: R$ {valor_total:.2f}*"
-        )
-        
+        brinde_msg = "\n🎁 *BRINDE RESGATADO!*" if ganhou_brinde else ""
+        msg = f"🍧 *PEDIDO JUBILEU*\n\n*Cliente:* {nome_cli}\n*Itens:*\n{resumo}{brinde_msg}\n\n*TOTAL: R$ {valor_total:.2f}*"
         link = f"https://wa.me/5537991031933?text={urllib.parse.quote(msg)}"
-        
-        # Interface de sucesso e botão de envio seguro
-        st.success("✅ Pedido gerado com sucesso!")
-        st.markdown(f"""
-            <a href="{link}" target="_blank" style="text-decoration: none;">
-                <div style="background-color: #25D366; color: white; padding: 18px; text-align: center; border-radius: 15px; font-weight: bold; font-size: 20px; margin-top: 10px; cursor: pointer; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
-                    📲 CLIQUE AQUI PARA ENVIAR NO WHATSAPP
-                </div>
-            </a>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<meta http-equiv="refresh" content="0;URL={link}">', unsafe_allow_html=True)
