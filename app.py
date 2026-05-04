@@ -24,13 +24,13 @@ def atualizar_pedido_cliente(nome, ganhou_brinde):
 
     if nome in df['nome'].values:
         if ganhou_brinde:
-            # Se ele acabou de ganhar o brinde, a contagem zera!
+            # Se ele ganhou o brinde, a contagem reseta para 0
             df.loc[df['nome'] == nome, 'pedidos'] = 0
         else:
-            # Se não ganhou, só adiciona +1 na contagem
+            # Se não ganhou, soma +1
             df.loc[df['nome'] == nome, 'pedidos'] += 1
     else:
-        # Primeiro pedido do cliente
+        # Primeiro pedido do cliente no sistema
         nova_linha = pd.DataFrame({'nome': [nome], 'pedidos': [1]})
         df = pd.concat([df, nova_linha], ignore_index=True)
     
@@ -45,7 +45,7 @@ def verificar_loja_aberta():
         status = str(df.columns[0]).strip().upper()
         return "SIM" in status
     except:
-        return True
+        return True # Segurança: se a planilha falhar, não bloqueia venda
 
 LOJA_ABERTA = verificar_loja_aberta()
 
@@ -77,7 +77,7 @@ else:
 itens_pedido = []
 valor_total = 0.0
 
-# --- ABAS ---
+# --- ABAS DO CARDÁPIO ---
 tab1, tab2 = st.tabs(["🔥 Combos Prontos", "Monte o Seu"])
 
 with tab1:
@@ -108,7 +108,6 @@ with tab2:
         "300ml": 13.00, "500ml": 18.00, "700ml": 23.00, "1 Litro": 32.00
     }
     
-    # Sem opção "Nenhum", iniciando vazio com placeholder
     escolha = st.selectbox("Selecione o copo:", options=list(tamanhos.keys()), index=None, placeholder="Clique para escolher o tamanho...")
     
     if escolha:
@@ -133,7 +132,7 @@ ganhou_brinde = False
 if nome_cli:
     qtd_pedidos = carregar_dados_cliente(nome_cli)
     
-    # Se ele tem exatos 9 pedidos salvos, este agora é o 10º!
+    # Se o histórico mostra 9 pedidos, este pedido agora é o 10º
     if qtd_pedidos == 9:
         ganhou_brinde = True
         st.markdown(f"""
@@ -155,15 +154,15 @@ end_cli = st.text_input("Endereço Completo:")
 pag_cli = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
 # --- BOTÃO FINAL ---
-if st.button("✅ FINALIZAR E ENVIAR PEDIDO"):
+if st.button("✅ FINALIZAR E MONTAR PEDIDO"):
     if not LOJA_ABERTA:
         st.error("❌ DESCULPE, A LOJA ESTÁ FECHADA NO MOMENTO!")
     elif valor_total == 0:
-        st.warning("Seu carrinho está vazio! Escolha um combo ou monte seu açaí.")
+        st.warning("Seu carrinho está vazio!")
     elif not nome_cli or not end_cli:
-        st.warning("Por favor, preencha seu nome e endereço para entrega!")
+        st.warning("Por favor, preencha seu nome e endereço!")
     else:
-        # AGORA ELE SALVA E ZERA SE TIVER GANHO O BRINDE
+        # Salva o progresso e zera se ele ganhou o brinde
         atualizar_pedido_cliente(nome_cli, ganhou_brinde)
         
         resumo = "\n".join(itens_pedido)
@@ -182,6 +181,12 @@ if st.button("✅ FINALIZAR E ENVIAR PEDIDO"):
         
         link = f"https://wa.me/5537991031933?text={urllib.parse.quote(msg)}"
         
-        # Redireciona para o WhatsApp
-        st.markdown(f'<meta http-equiv="refresh" content="0;URL={link}">', unsafe_allow_html=True)
-        st.success("Pedido finalizado com sucesso! Abrindo o seu WhatsApp...")
+        # Interface de sucesso e botão de envio seguro
+        st.success("✅ Pedido gerado com sucesso!")
+        st.markdown(f"""
+            <a href="{link}" target="_blank" style="text-decoration: none;">
+                <div style="background-color: #25D366; color: white; padding: 18px; text-align: center; border-radius: 15px; font-weight: bold; font-size: 20px; margin-top: 10px; cursor: pointer; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);">
+                    📲 CLIQUE AQUI PARA ENVIAR NO WHATSAPP
+                </div>
+            </a>
+        """, unsafe_allow_html=True)
