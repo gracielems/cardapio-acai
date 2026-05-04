@@ -1,6 +1,6 @@
 import streamlit as st
 import urllib.parse
-import pd as pd
+import pandas as pd
 import os
 
 # --- ARQUIVO DE BANCO DE DADOS LOCAL (FIDELIDADE) ---
