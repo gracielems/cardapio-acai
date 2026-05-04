@@ -87,7 +87,8 @@ for nome_arquivo in nomes_logo:
 itens_pedido = []
 valor_total = 0.0
 
-tab1, tab2 = st.tabs(["🔥 Combos", "Monte o Seu"])
+# Adicionada a nova aba "🥤 Açaí na Garrafa"
+tab1, tab2, tab3 = st.tabs(["🔥 Combos", "🥤 Açaí na Garrafa", "🍧 Monte o Seu"])
 
 with tab1:
     combos = {
@@ -100,7 +101,24 @@ with tab1:
             itens_pedido.append(nome)
             valor_total += preco
 
+# NOVA ABA: Açaí na Garrafa (Baseado na imagem enviada)
 with tab2:
+    st.markdown('<div class="secao">🥤 ESCOLHA SUA GARRAFA (300ml)</div>', unsafe_allow_html=True)
+    st.caption("Todas as garrafas são batidas com leite, leite em pó, banana e leite condensado.")
+    
+    garrafas = {
+        "🥤 Açaí Tradicional": 10.00,
+        "🥤 Açaí com Leite em Pó": 13.00,
+        "🥤 Açaí com Creme de Morango": 13.00,
+        "🥤 Açaí com Creme de Maracujá": 13.00
+    }
+    
+    for nome, preco in garrafas.items():
+        if st.checkbox(f"{nome} - R$ {preco:.2f}", key=f"ga_{nome}"):
+            itens_pedido.append(nome)
+            valor_total += preco
+
+with tab3:
     st.markdown('<div class="secao">1. TAMANHO DO COPO</div>', unsafe_allow_html=True)
     tamanhos = {"300ml": 13.0, "500ml": 18.0, "700ml": 23.0, "1 Litro": 32.0}
     escolha = st.selectbox("Escolha:", list(tamanhos.keys()), index=None, placeholder="Selecione...")
@@ -151,7 +169,6 @@ pag_cli = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
 # --- FINALIZAÇÃO COM BLOQUEIO ---
 if st.button("✅ GERAR PEDIDO PARA WHATSAPP"):
-    # Lista de campos obrigatórios para facilitar a validação
     campos_vazios = not (nome_p and sobrenome_p and rua and numero and bairro and referencia)
     
     if not LOJA_ABERTA:
