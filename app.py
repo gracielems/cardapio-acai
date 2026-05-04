@@ -9,28 +9,20 @@ st.set_page_config(page_title="Jubileu Açaí", page_icon="🍧")
 # --- LIMPEZA TOTAL DA INTERFACE E CORREÇÃO DE CORES ---
 st.markdown("""
     <style>
-    /* Esconde elementos de administração e menus da plataforma */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     [data-testid="stHeader"] {display: none;}
     [data-testid="stToolbar"] {display: none;}
     .stDeployButton {display:none;}
-    
-    /* Força o fundo branco e letras escuras para legibilidade total */
     .stApp { background-color: #ffffff; }
-    
-    /* Garante que o texto de labels e parágrafos seja preto e nítido */
     label, p, span, .stMarkdown {
         color: #1a1a1a !important;
         font-weight: 500;
     }
-    
-    /* Títulos e divisões em Roxo Jubileu */
     h1, h2, h3, .secao {
         color: #4B0082 !important;
     }
-
     .secao { 
         font-weight: bold; 
         border-bottom: 2px solid #4B0082; 
@@ -38,8 +30,6 @@ st.markdown("""
         margin-top: 30px; 
         margin-bottom: 15px; 
     }
-
-    /* Botão de WhatsApp profissional */
     .btn-whats {
         display: inline-block; padding: 15px 25px; background-color: #25D366; color: white !important;
         text-align: center; text-decoration: none; font-size: 18px; font-weight: bold;
@@ -125,8 +115,8 @@ with tab2:
                 itens_pedido.append(f"Adicional {item}")
                 valor_total += 3.0
 
-# --- DADOS DO CLIENTE (NOME E SOBRENOME SEPARADOS) ---
-st.markdown('<div class="secao">DADOS PARA ENTREGA E FIDELIDADE</div>', unsafe_allow_html=True)
+# --- DADOS DO CLIENTE ---
+st.markdown('<div class="secao">DADOS DO CLIENTE</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -144,19 +134,32 @@ if nome_p and sobrenome_p:
         st.balloons()
         st.success(f"🎁 PARABÉNS {nome_p.upper()}! Seu 10º pedido é um brinde!")
     else:
-        st.info(f"Olá {nome_p.upper()}! Você tem {qtd} pedidos. Com 10 você ganha um brinde! 💜")
+        st.info(f"Olá {nome_p.upper()}! Você tem {qtd} pedidos registrados. 💜")
 
-end_cli = st.text_input("Endereço Completo:")
+# --- ENDEREÇO DETALHADO ---
+st.markdown('<div class="secao">ENDEREÇO DE ENTREGA</div>', unsafe_allow_html=True)
+rua = st.text_input("Rua/Avenida:")
+
+col_end1, col_end2 = st.columns([1, 2])
+with col_end1:
+    numero = st.text_input("Número:")
+with col_end2:
+    bairro = st.text_input("Bairro:")
+
+referencia = st.text_input("Ponto de Referência:")
 pag_cli = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
-# --- FINALIZAÇÃO ---
+# --- FINALIZAÇÃO COM BLOQUEIO ---
 if st.button("✅ GERAR PEDIDO PARA WHATSAPP"):
+    # Lista de campos obrigatórios para facilitar a validação
+    campos_vazios = not (nome_p and sobrenome_p and rua and numero and bairro and referencia)
+    
     if not LOJA_ABERTA:
         st.error("LOJA FECHADA!")
     elif valor_total == 0:
-        st.warning("Selecione algum item!")
-    elif not nome_p or not sobrenome_p or not end_cli:
-        st.warning("Preencha Nome, Sobrenome e Endereço!")
+        st.warning("Selecione algum item no cardápio!")
+    elif campos_vazios:
+        st.warning("⚠️ Por favor, preencha TODOS os campos (Nome, Rua, Número, Bairro e Referência) antes de enviar.")
     else:
         atualizar_pedido_cliente(nome_completo, ganhou_brinde)
         resumo = "\n".join(itens_pedido)
@@ -164,8 +167,11 @@ if st.button("✅ GERAR PEDIDO PARA WHATSAPP"):
         
         msg = (
             f"*PEDIDO JUBILEU AÇAÍ*\n"
+            f"--------------------------\n"
             f"*Cliente:* {nome_completo}\n"
-            f"*Endereço:* {end_cli}\n"
+            f"*Endereço:* {rua}, {numero}\n"
+            f"*Bairro:* {bairro}\n"
+            f"*Referência:* {referencia}\n"
             f"--------------------------\n"
             f"*Itens:*\n{resumo}{brinde_txt}\n\n"
             f"*Pagamento:* {pag_cli}\n"
