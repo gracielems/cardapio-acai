@@ -1,6 +1,7 @@
 import streamlit as st
 import urllib.parse
 import pandas as pd
+import os
 
 # --- CONEXÃO COM A PLANILHA (CONTROLE DE HORÁRIO) ---
 LINK_PLANILHA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQA1CUqaVNElv3-c_Ylb1XKH3_z1h5h1dbH66HkKRIafoh6lheQ5z-MY6oKMSkkqGnsxUXryigtPm3N/pub?output=csv"
@@ -32,13 +33,25 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- TOPO COM A IMAGEM 3D GIGANTE ---
-try:
-    # Mostra a imagem 3D pegando a largura toda da tela
+# --- TOPO COM A IMAGEM 3D GIGANTE (SISTEMA INTELIGENTE) ---
+# O código agora procura todos os formatos possíveis da sua logo
+if os.path.exists("logo3d.png"):
+    st.image("logo3d.png", use_container_width=True)
+elif os.path.exists("logo3d.jpg"):
     st.image("logo3d.jpg", use_container_width=True)
-except:
-    # Se a imagem ainda não tiver carregado no GitHub, mostra um título provisório
-    st.markdown("<h1 style='text-align: center; color: #4B0082;'>🍧 Jubileu Açaí</h1>", unsafe_allow_html=True)
+elif os.path.exists("logo3d.jpeg"):
+    st.image("logo3d.jpeg", use_container_width=True)
+elif os.path.exists("logo3d.webp"):
+    st.image("logo3d.webp", use_container_width=True)
+else:
+    # Se ele não achar a imagem de jeito nenhum, volta a faixa roxa com o nome
+    st.markdown("""
+    <div style="background: linear-gradient(90deg, #4B0082 0%, #8A2BE2 100%); padding: 25px; border-radius: 0px 0px 30px 30px; color: white !important; text-align: center; margin: -60px -20px 20px -20px;">
+        <h1 style="margin-bottom: 0;">🍧 Jubileu Açaí</h1>
+        <p style="margin-top: 0;">Nova Serrana - O melhor açaí da região!</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.warning("Aviso: A imagem da logo 3D não foi encontrada. Verifique se o nome no GitHub está exatamente como 'logo3d.png' ou 'logo3d.jpg'.")
 
 # --- AVISO DE LOJA FECHADA ---
 if not LOJA_ABERTA:
