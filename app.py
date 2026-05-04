@@ -3,37 +3,27 @@ import urllib.parse
 import pandas as pd
 
 # --- CONEXÃO COM A PLANILHA (CONTROLE DE HORÁRIO) ---
-# Adicionamos um parâmetro aleatório ao link para forçar o Google a entregar o dado novo
 LINK_PLANILHA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQA1CUqaVNElv3-c_Ylb1XKH3_z1h5h1dbH66HkKRIafoh6lheQ5z-MY6oKMSkkqGnsxUXryigtPm3N/pub?output=csv"
 
 def verificar_loja_aberta():
     try:
-        # Lemos a planilha sem guardar na memória (cache)
         df = pd.read_csv(LINK_PLANILHA)
-        # Verifica se a palavra 'SIM' está na primeira linha/coluna
         status = str(df.columns[0]).strip().upper()
         if "SIM" in status:
             return True
         else:
             return False
     except:
-        # Se der erro na planilha, por segurança, deixamos aberto
         return True
 
-# Chamamos a função para definir a variável
 LOJA_ABERTA = verificar_loja_aberta()
 
 # --- CONFIGURAÇÃO DE DESIGN ---
-st.set_page_config(page_title="Jubilu Açaí", page_icon="🍧")
+st.set_page_config(page_title="Jubileu Açaí", page_icon="🍧")
 
 st.markdown("""
     <style>
     .stApp { background-color: #ffffff; }
-    .banner {
-        background: linear-gradient(90deg, #4B0082 0%, #8A2BE2 100%);
-        padding: 25px; border-radius: 0px 0px 30px 30px;
-        color: white !important; text-align: center; margin: -60px -20px 20px -20px;
-    }
     .secao { color: #4B0082; font-weight: bold; border-bottom: 2px solid #4B0082; padding-bottom: 5px; margin-top: 30px; }
     .stButton>button { 
         width: 100%; background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
@@ -42,7 +32,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="banner"><h1>🍧 Jubilu Delivery</h1><p>Nova Serrana - O melhor açaí da região!</p></div>', unsafe_allow_html=True)
+# --- TOPO COM A IMAGEM 3D GIGANTE ---
+try:
+    # Mostra a imagem 3D pegando a largura toda da tela
+    st.image("logo3d.jpg", use_container_width=True)
+except:
+    # Se a imagem ainda não tiver carregado no GitHub, mostra um título provisório
+    st.markdown("<h1 style='text-align: center; color: #4B0082;'>🍧 Jubileu Açaí</h1>", unsafe_allow_html=True)
 
 # --- AVISO DE LOJA FECHADA ---
 if not LOJA_ABERTA:
@@ -129,7 +125,7 @@ if st.button("✅ FINALIZAR E ENVIAR PEDIDO"):
     else:
         resumo_itens = "\n".join(itens_pedido)
         mensagem_zap = (
-            f"🍧 *NOVO PEDIDO JUBILU*\n\n"
+            f"🍧 *NOVO PEDIDO JUBILEU*\n\n"
             f"*Cliente:* {nome_cli}\n"
             f"*Endereço:* {end_cli}\n"
             f"*Pagamento:* {pag_cli}\n\n"
