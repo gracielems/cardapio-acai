@@ -33,9 +33,9 @@ def get_status_loja():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("SELECT valor FROM config WHERE chave = 'status_loja'")
-    status = c.fetchone()[0]
+    res = c.fetchone()
     conn.close()
-    return status == "ABERTA"
+    return res[0] == "ABERTA" if res else True
 
 def set_status_loja(status):
     conn = sqlite3.connect(DB_NAME)
@@ -151,7 +151,7 @@ if not st.session_state.admin_logado:
 
     if total_itens > 0:
         st.markdown('<div class="check-out">', unsafe_allow_html=True)
-        st.subheader("📋 Resumo do Pedido")
+        st.subheader("Resumo do Pedido")
         for item in itens_pedido: st.write(f"• {item}")
         if brinde_ativo: st.write("🎁 **Brinde Fidelidade Aplicado!**")
         st.write(f"**TOTAL: R$ {total_final:.2f}**")
@@ -169,15 +169,17 @@ if not st.session_state.admin_logado:
                 link = f"https://wa.me/5537991031933?text={urllib.parse.quote(msg)}"
                 st.markdown(f'<a href="{link}" target="_blank" class="btn-whats">🚀 ENVIAR PARA O WHATSAPP</a>', unsafe_allow_html=True)
 
+    # --- 🔐 ACESSO DISCRETO (SUBSTITUINDO O BOTÃO "PAINEL ADMIN") ---
     st.markdown("---")
-    if st.button("Painel Admin"): st.session_state.admin_logado = "solicitar_senha"; st.rerun()
+    if st.button("v1.5", help="Informações do Sistema"):
+        st.session_state.admin_logado = "solicitar_senha"; st.rerun()
 
 # --- 🔐 5. PAINEL DO DONO ---
 if st.session_state.admin_logado == "solicitar_senha":
-    senha = st.text_input("Senha Admin:", type="password")
-    if st.button("Acessar"):
+    senha = st.text_input("Senha de Acesso:", type="password")
+    if st.button("Entrar"):
         if senha == SENHA_DONO: st.session_state.admin_logado = True; st.rerun()
-        else: st.error("Senha incorreta!")
+        else: st.error("Acesso negado!")
     if st.button("Voltar"): st.session_state.admin_logado = False; st.rerun()
 
 if st.session_state.admin_logado is True:
@@ -194,28 +196,25 @@ if st.session_state.admin_logado is True:
     conn.close()
 
     if not df_v.empty:
-        # Métricas Principais
         st.metric("Faturamento Total", f"R$ {df_v['total'].sum():.2f}")
 
-        # --- 📈 NOVOS GRÁFICOS ---
-        st.markdown('<div class="secao">ANÁLISE DE VENDAS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="secao">ANÁLISE DE DESEMPENHO</div>', unsafe_allow_html=True)
         
         # 1. Tendência de Faturamento Diário
-        st.subheader("📅 Tendência de Faturamento Diário")
+        st.subheader("📅 Faturamento Diário")
         df_v['Data_F'] = pd.to_datetime(df_v['data'], dayfirst=True).dt.date
         faturamento_diario = df_v.groupby('Data_F')['total'].sum()
         st.line_chart(faturamento_diario)
 
         # 2. Top 5 Produtos (Pareto)
-        st.subheader("🏆 Top 5 Produtos Mais Vendidos")
-        # Explode a lista de itens para contar cada um individualmente
+        st.subheader("🏆 Top 5 Produtos (Mais Vendidos)")
         todos_itens = df_v['itens'].str.split(', ').explode()
         top_produtos = todos_itens.value_counts().head(5)
         st.bar_chart(top_produtos)
 
-        st.subheader("📋 Histórico Completo")
+        st.subheader("📋 Histórico Recente")
         st.dataframe(df_v.sort_values(by='id', ascending=False), use_container_width=True)
     else:
-        st.info("Nenhuma venda registrada ainda.")
+        st.info("Aguardando primeiras vendas para gerar gráficos.")
 
-    if st.button("⬅️ Sair"): st.session_state.admin_logado = False; st.rerun()
+    if st.button("⬅️ Sair do Painel"): st.session_state.admin_logado = False; st.rerun()
