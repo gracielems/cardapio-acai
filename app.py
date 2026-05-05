@@ -6,7 +6,7 @@ import os
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Jubileu Açaí", page_icon="🍧")
 
-# --- LIMPEZA TOTAL DA INTERFACE E CORREÇÃO DE CORES ---
+# --- LIMPEZA TOTAL DA INTERFACE E ESTILIZAÇÃO PERSONALIZADA ---
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -16,10 +16,14 @@ st.markdown("""
     [data-testid="stToolbar"] {display: none;}
     .stDeployButton {display:none;}
     .stApp { background-color: #ffffff; }
+    
+    /* Cores de textos e labels */
     label, p, span, .stMarkdown {
         color: #1a1a1a !important;
         font-weight: 500;
     }
+    
+    /* Estilo dos Títulos de Seção */
     h1, h2, h3, .secao {
         color: #4B0082 !important;
     }
@@ -30,6 +34,15 @@ st.markdown("""
         margin-top: 30px; 
         margin-bottom: 15px; 
     }
+
+    /* DESTAQUE NAS ABAS (TEXTO MAIOR) */
+    button[data-baseweb="tab"] p {
+        font-size: 20px !important;
+        font-weight: bold !important;
+        color: #4B0082 !important;
+    }
+
+    /* Estilo do Botão do WhatsApp */
     .btn-whats {
         display: inline-block; padding: 15px 25px; background-color: #25D366; color: white !important;
         text-align: center; text-decoration: none; font-size: 18px; font-weight: bold;
@@ -87,7 +100,6 @@ for nome_arquivo in nomes_logo:
 itens_pedido = []
 valor_total = 0.0
 
-# Adicionada a nova aba "🥤 Açaí na Garrafa"
 tab1, tab2, tab3 = st.tabs(["🔥 Combos", "🥤 Açaí na Garrafa", "🍧 Monte o Seu"])
 
 with tab1:
@@ -101,18 +113,14 @@ with tab1:
             itens_pedido.append(nome)
             valor_total += preco
 
-# NOVA ABA: Açaí na Garrafa (Baseado na imagem enviada)
 with tab2:
     st.markdown('<div class="secao">🥤 ESCOLHA SUA GARRAFA (300ml)</div>', unsafe_allow_html=True)
-    st.caption("Todas as garrafas são batidas com leite, leite em pó, banana e leite condensado.")
-    
     garrafas = {
         "🥤 Açaí Tradicional": 10.00,
         "🥤 Açaí com Leite em Pó": 13.00,
         "🥤 Açaí com Creme de Morango": 13.00,
         "🥤 Açaí com Creme de Maracujá": 13.00
     }
-    
     for nome, preco in garrafas.items():
         if st.checkbox(f"{nome} - R$ {preco:.2f}", key=f"ga_{nome}"):
             itens_pedido.append(nome)
@@ -122,7 +130,6 @@ with tab3:
     st.markdown('<div class="secao">1. TAMANHO DO COPO</div>', unsafe_allow_html=True)
     tamanhos = {"300ml": 13.0, "500ml": 18.0, "700ml": 23.0, "1 Litro": 32.0}
     escolha = st.selectbox("Escolha:", list(tamanhos.keys()), index=None, placeholder="Selecione...")
-    
     if escolha:
         valor_total += tamanhos[escolha]
         itens_pedido.append(f"Copo {escolha}")
@@ -135,7 +142,6 @@ with tab3:
 
 # --- DADOS DO CLIENTE ---
 st.markdown('<div class="secao">DADOS DO CLIENTE</div>', unsafe_allow_html=True)
-
 col1, col2 = st.columns(2)
 with col1:
     nome_p = st.text_input("Primeiro Nome:").strip()
@@ -157,17 +163,27 @@ if nome_p and sobrenome_p:
 # --- ENDEREÇO DETALHADO ---
 st.markdown('<div class="secao">ENDEREÇO DE ENTREGA</div>', unsafe_allow_html=True)
 rua = st.text_input("Rua/Avenida:")
-
 col_end1, col_end2 = st.columns([1, 2])
 with col_end1:
     numero = st.text_input("Número:")
 with col_end2:
     bairro = st.text_input("Bairro:")
-
 referencia = st.text_input("Ponto de Referência:")
+
+# --- PAGAMENTO E TROCO ---
+st.markdown('<div class="secao">PAGAMENTO</div>', unsafe_allow_html=True)
 pag_cli = st.selectbox("Forma de Pagamento:", ["Pix", "Cartão", "Dinheiro"])
 
-# --- FINALIZAÇÃO COM BLOQUEIO ---
+info_troco = ""
+if pag_cli == "Dinheiro":
+    precisa_troco = st.radio("Precisa de troco?", ["Não", "Sim"])
+    if precisa_troco == "Sim":
+        valor_troco = st.text_input("Troco para quanto? (Ex: 50)")
+        info_troco = f"\n*Troco:* Sim, para R$ {valor_troco}"
+    else:
+        info_troco = f"\n*Troco:* Não necessário"
+
+# --- FINALIZAÇÃO ---
 if st.button("✅ GERAR PEDIDO PARA WHATSAPP"):
     campos_vazios = not (nome_p and sobrenome_p and rua and numero and bairro and referencia)
     
@@ -176,7 +192,7 @@ if st.button("✅ GERAR PEDIDO PARA WHATSAPP"):
     elif valor_total == 0:
         st.warning("Selecione algum item no cardápio!")
     elif campos_vazios:
-        st.warning("⚠️ Por favor, preencha TODOS os campos (Nome, Rua, Número, Bairro e Referência) antes de enviar.")
+        st.warning("⚠️ Por favor, preencha TODOS os campos de endereço e nome.")
     else:
         atualizar_pedido_cliente(nome_completo, ganhou_brinde)
         resumo = "\n".join(itens_pedido)
@@ -191,7 +207,7 @@ if st.button("✅ GERAR PEDIDO PARA WHATSAPP"):
             f"*Referência:* {referencia}\n"
             f"--------------------------\n"
             f"*Itens:*\n{resumo}{brinde_txt}\n\n"
-            f"*Pagamento:* {pag_cli}\n"
+            f"*Pagamento:* {pag_cli}{info_troco}\n"
             f"*TOTAL: R$ {valor_total:.2f}*"
         )
         
