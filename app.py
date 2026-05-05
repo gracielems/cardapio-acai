@@ -11,6 +11,9 @@ PRECOS_COPOS = {"300ml": 13.0, "500ml": 18.0, "700ml": 23.0, "1 Litro": 32.0}
 VALOR_ADICIONAL = 3.00
 SENHA_DONO = "jubileu123" 
 
+# Nome da imagem corrigido conforme sua informação
+NOME_IMAGEM = "logo3d.jpg.png" 
+
 ARQUIVO_FIDELIDADE = "database_fidelidade.csv"
 ARQUIVO_VENDAS = "historico_vendas.csv"
 
@@ -56,9 +59,11 @@ if "admin_logado" not in st.session_state: st.session_state.admin_logado = False
 
 # --- 🍧 4. CARDÁPIO (CLIENTE) ---
 if not st.session_state.admin_logado:
-    # Retorno da Logo
-    if os.path.exists("logo3d.png"): 
-        st.image("logo3d.png", use_container_width=True)
+    # Exibição da Logo com o nome de arquivo corrigido
+    if os.path.exists(NOME_IMAGEM): 
+        st.image(NOME_IMAGEM, use_container_width=True)
+    else:
+        st.error(f"A imagem '{NOME_IMAGEM}' não foi encontrada na pasta.")
 
     itens_pedido = []; total_itens = 0.0
     tab1, tab2, tab3 = st.tabs(["🔥 Combos", "🥤 Na Garrafa", "🍧 Monte o Seu"])
@@ -88,7 +93,6 @@ if not st.session_state.admin_logado:
     sp = c2.text_input("Sobrenome:").strip()
     nome_completo = f"{np} {sp}".upper().strip()
 
-    # Sistema de Fidelidade
     brinde_ativo = False
     if np and sp:
         q = carregar_pedidos(nome_completo)
@@ -97,7 +101,7 @@ if not st.session_state.admin_logado:
         else:
             st.write(f"Sua Fidelidade: **{q}/10**"); st.progress(q/10)
 
-    # Retorno dos Campos de Endereço Separados
+    # Campos de endereço separados como solicitado
     col_rua, col_num = st.columns([3, 1])
     rua = col_rua.text_input("Rua / Logradouro:")
     numero = col_num.text_input("Nº:")
@@ -111,7 +115,7 @@ if not st.session_state.admin_logado:
             v = st.text_input("Troco para quanto?")
             troco_msg = f" (Troco para {v})"
 
-    # --- 🛒 CHECK-OUT E FINALIZAÇÃO ---
+    # --- 🛒 CHECK-OUT ---
     total_final = 0.00 if brinde_ativo else total_itens
 
     if total_itens > 0:
@@ -142,12 +146,12 @@ if not st.session_state.admin_logado:
                 link = f"https://wa.me/5537991031933?text={urllib.parse.quote(msg)}"
                 st.markdown(f'<a href="{link}" target="_blank" class="btn-whats">🚀 ENVIAR PARA O WHATSAPP</a>', unsafe_allow_html=True)
 
-    # Acesso discreto ao Admin
+    # Botão de acesso discreto ao Admin
     st.markdown("---")
     if st.button("v1.2", help="Acesso Restrito"):
         st.session_state.admin_logado = "solicitar_senha"; st.rerun()
 
-# --- 🔐 5. PAINEL DO DONO (GRÁFICOS E GESTÃO) ---
+# --- 🔐 5. PAINEL DO DONO ---
 if st.session_state.admin_logado == "solicitar_senha":
     senha = st.text_input("Senha Admin:", type="password")
     if st.button("Acessar"):
@@ -165,11 +169,9 @@ if st.session_state.admin_logado is True:
         col1.metric("Faturamento Total", f"R$ {df_v['Total'].sum():.2f}")
         col2.metric("Total de Pedidos", len(df_v))
 
-        # Gráfico de Faturamento
         st.subheader("📈 Faturamento Diário")
         st.bar_chart(df_v.groupby('Data')['Total'].sum())
 
-        # Ranking de Produtos
         st.subheader("🏆 Produtos Mais Vendidos")
         rank = df_v['Itens'].str.split(', ').explode().value_counts()
         st.bar_chart(rank.head(5))
@@ -177,4 +179,4 @@ if st.session_state.admin_logado is True:
         st.subheader("📋 Histórico de Vendas")
         st.dataframe(df_v, use_container_width=True)
     else:
-        st.info("Aguardando primeiras vendas para gerar dados.")
+        st.info("Nenhuma venda registrada ainda.")
