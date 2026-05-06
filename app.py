@@ -56,7 +56,12 @@ def init_db():
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS vendas
                       (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                       data TEXT, cliente TEXT, total REAL, itens TEXT)''')
+                       data TEXT, cliente TEXT, telefone TEXT, total REAL, itens TEXT)''')
+        # Migração segura: adiciona coluna telefone se já existir banco antigo sem ela
+        try:
+            c.execute("ALTER TABLE vendas ADD COLUMN telefone TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # Coluna já existe, tudo certo
         c.execute('''CREATE TABLE IF NOT EXISTS fidelidade
                       (nome TEXT PRIMARY KEY, pedidos INTEGER)''')
         c.execute('''CREATE TABLE IF NOT EXISTS config
@@ -78,13 +83,13 @@ def set_status_loja(status):
         c.execute("UPDATE config SET valor = ? WHERE chave = 'status_loja'", (status,))
 
 
-def registrar_venda_db(nome, total, itens):
+def registrar_venda_db(nome, telefone, total, itens):
     data_hoje = datetime.now().strftime("%d/%m/%Y %H:%M")
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "INSERT INTO vendas (data, cliente, total, itens) VALUES (?, ?, ?, ?)",
-            (data_hoje, nome, total, itens),
+            "INSERT INTO vendas (data, cliente, telefone, total, itens) VALUES (?, ?, ?, ?, ?)",
+            (data_hoje, nome, telefone, total, itens),
         )
 
 
@@ -177,6 +182,8 @@ if not st.session_state.admin_logado:
     sp_ = c2.text_input("Sobrenome:").strip()
     nome_completo = f"{np_} {sp_}".upper().strip()
 
+    telefone = st.text_input("📱 WhatsApp / Telefone:", placeholder="(37) 99999-9999").strip()
+
     brinde_ativo = False
     if np_ and sp_:
         q = carregar_fidelidade_db(nome_completo)
@@ -213,14 +220,17 @@ if not st.session_state.admin_logado:
         if st.button("✅ FINALIZAR PEDIDO", disabled=not loja_aberta):
             if not (np_ and rua and numero and bairro):
                 st.warning("Preencha nome e endereço completo (incluindo número)!")
+            elif not telefone:
+                st.warning("Preencha o campo de telefone para contato!")
             elif not itens_pedido:
                 st.warning("Adicione pelo menos um item ao pedido!")
             else:
-                registrar_venda_db(nome_completo, total_final, ", ".join(itens_pedido))
+                registrar_venda_db(nome_completo, telefone, total_final, ", ".join(itens_pedido))
                 atualizar_fidelidade_db(nome_completo, brinde_ativo)
                 msg = (
                     f"*NOVO PEDIDO JUBILEU AÇAÍ*\n------------------\n"
                     f"*Cliente:* {nome_completo}\n"
+                    f"*Telefone:* {telefone}\n"
                     f"*Endereço:* {rua}, {numero} - {bairro}\n------------------\n"
                     f"*Itens:* {', '.join(itens_pedido)}\n"
                     f"*Pagamento:* {pag}{troco_msg}\n"
@@ -287,7 +297,19 @@ if st.session_state.admin_logado is True:
         st.bar_chart(top_produtos)
 
         st.subheader("📋 Histórico Recente")
-        st.dataframe(df_v.sort_values(by="id", ascending=False), use_container_width=True)
+        df_exibir = df_v.sort_values(by="id", ascending=False)
+        st.dataframe(df_exibir, use_container_width=True)
+
+        st.markdown('<div class="secao">EXPORTAR DADOS</div>', unsafe_allow_html=True)
+        csv = df_exibir.to_csv(index=False, sep=";", decimal=",", encoding="utf-8-sig")
+        nome_arquivo = f"vendas_jubileu_{datetime.now().strftime('%d-%m-%Y')}.csv"
+        st.download_button(
+            label="⬇️ Baixar histórico em CSV",
+            data=csv,
+            file_name=nome_arquivo,
+            mime="text/csv",
+            help="Abre no Excel — pronto para controle financeiro",
+        )
     else:
         st.info("Aguardando primeiras vendas para gerar gráficos.")
 
