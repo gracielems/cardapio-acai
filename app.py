@@ -6,9 +6,7 @@ from datetime import datetime
 from contextlib import contextmanager
 import urllib.parse
 
-# ─────────────────────────────────────────────
-# 1. CONFIGURAÇÕES E PREÇOS
-# ─────────────────────────────────────────────
+# ─── PRODUTOS ────────────────────────────────
 
 ACAI_TAMANHOS = {
     "Açaí 300ml": 13.00,
@@ -18,32 +16,31 @@ ACAI_TAMANHOS = {
 }
 
 COMPLEMENTOS = {
-    "Leite em Pó":        4.00,
-    "Leite Condensado":   4.00,
-    "Nutella":            8.00,
-    "Creme de Avelã":     6.00,
-    "Ovomaltine":         4.00,
-    "Confete":            5.00,
+    "Leite em Pó": 4.00,
+    "Leite Condensado": 4.00,
+    "Nutella": 8.00,
+    "Creme de Avelã": 6.00,
+    "Ovomaltine": 4.00,
+    "Confete": 5.00,
     "Gotas de Chocolate": 4.00,
-    "Fine Beijo":         4.00,
-    "Fine Banana":        4.00,
-    "Paçoca":             2.00,
-    "Granola":            2.00,
-    "Uva Verde":          4.00,
-    "Chantilly":          4.00,
+    "Fine Beijo": 4.00,
+    "Fine Banana": 4.00,
+    "Paçoca": 2.00,
+    "Granola": 2.00,
+    "Uva Verde": 4.00,
+    "Chantilly": 4.00,
     "Mousse de Maracujá": 5.00,
 }
 
 GARRAFAS = {
     "Tradicional": 10.00,
     "Leite em Pó": 13.00,
-    "Morango":     13.00,
-    "Maracujá":    13.00,
+    "Morango": 13.00,
+    "Maracujá": 13.00,
 }
 
 CHOCOLATE_QUENTE = {"Chocolate Quente": 12.00}
 
-# Emoji de representação para cada produto (usado nos cards)
 EMOJIS = {
     "Açaí 300ml": "🍧", "Açaí 500ml": "🍧", "Açaí 700ml": "🍧", "Açaí 1 Litro": "🍧",
     "Leite em Pó": "🥛", "Leite Condensado": "🍯", "Nutella": "🍫", "Creme de Avelã": "🍫",
@@ -62,9 +59,7 @@ except Exception:
 DB_NAME = "jubileu_database.db"
 WHATSAPP_NUMBER = "5537991031933"
 
-# ─────────────────────────────────────────────
-# 2. BANCO DE DADOS
-# ─────────────────────────────────────────────
+# ─── BANCO DE DADOS ───────────────────────────
 
 @contextmanager
 def get_db():
@@ -77,7 +72,6 @@ def get_db():
         raise
     finally:
         conn.close()
-
 
 def init_db():
     with get_db() as conn:
@@ -95,7 +89,6 @@ def init_db():
                      (chave TEXT PRIMARY KEY, valor TEXT)''')
         c.execute("INSERT OR IGNORE INTO config (chave, valor) VALUES ('status_loja', 'ABERTA')")
 
-
 def get_status_loja():
     with get_db() as conn:
         c = conn.cursor()
@@ -103,12 +96,10 @@ def get_status_loja():
         res = c.fetchone()
     return res[0] == "ABERTA" if res else True
 
-
 def set_status_loja(status):
     with get_db() as conn:
         c = conn.cursor()
         c.execute("UPDATE config SET valor = ? WHERE chave = 'status_loja'", (status,))
-
 
 def registrar_venda_db(nome, telefone, total, itens):
     data_hoje = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -119,7 +110,6 @@ def registrar_venda_db(nome, telefone, total, itens):
             (data_hoje, nome, telefone, total, itens),
         )
 
-
 def carregar_fidelidade_db(nome):
     nome = nome.strip().upper()
     with get_db() as conn:
@@ -127,7 +117,6 @@ def carregar_fidelidade_db(nome):
         c.execute("SELECT pedidos FROM fidelidade WHERE nome = ?", (nome,))
         res = c.fetchone()
     return res[0] if res else 0
-
 
 def atualizar_fidelidade_db(nome, brinde):
     nome = nome.strip().upper()
@@ -140,342 +129,145 @@ def atualizar_fidelidade_db(nome, brinde):
             (nome, nova_qtd),
         )
 
-
 init_db()
 
-# ─────────────────────────────────────────────
-# 3. PÁGINA E CSS GLOBAL
-# ─────────────────────────────────────────────
+# ─── CONFIG DA PÁGINA ─────────────────────────
 
 st.set_page_config(page_title="Jubileu Açaí", page_icon="🍧", layout="centered")
 
-st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  /* ── Reset e fonte ── */
-  html, body, [class*="css"] { font-family: 'Nunito', sans-serif !important; }
-  .stApp { background: #f5f0fa !important; }
+# Fonte Google
+st.markdown(
+    '<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">',
+    unsafe_allow_html=True
+)
 
-  /* ── Oculta elementos padrão do Streamlit ── */
-  #MainMenu, footer, header { visibility: hidden; }
-  .block-container { padding: 0 !important; max-width: 540px !important; margin: 0 auto !important; }
+# CSS base
+st.markdown("""<style>
+html, body, [class*="css"] { font-family: 'Nunito', sans-serif !important; }
+.stApp { background: #f5f0fa !important; }
+#MainMenu, footer, header { visibility: hidden; }
+.block-container { padding-top: 0 !important; padding-left: 0.8rem !important; padding-right: 0.8rem !important; max-width: 560px !important; }
+</style>""", unsafe_allow_html=True)
 
-  /* ── Banner roxo do topo ── */
-  .banner {
-    background: #6A0DAD;
-    padding: 28px 20px 56px;
-    text-align: center;
-    position: relative;
-  }
-  .banner h1 { color: white; font-size: 22px; font-weight: 800; letter-spacing: 1px; margin: 0; }
-  .banner p  { color: rgba(255,255,255,0.85); font-size: 13px; margin: 4px 0 0; }
-  .logo-circle {
-    width: 72px; height: 72px; border-radius: 50%;
-    background: #f0e6ff; border: 3px solid white;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 30px;
-    position: absolute; bottom: -36px; left: 50%; transform: translateX(-50%);
-    box-shadow: 0 2px 12px rgba(106,13,173,0.25);
-  }
+# CSS banner
+st.markdown("""<style>
+.jub-banner { background: linear-gradient(135deg, #6A0DAD 0%, #9b30d9 100%); padding: 28px 20px 52px; text-align: center; position: relative; border-radius: 0 0 24px 24px; }
+.jub-banner h1 { color: white; font-size: 22px; font-weight: 800; margin: 0; letter-spacing: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.jub-banner p { color: rgba(255,255,255,0.85); font-size: 13px; margin: 5px 0 0; }
+.jub-logo { width: 66px; height: 66px; border-radius: 50%; background: white; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 28px; position: absolute; bottom: -33px; left: 50%; transform: translateX(-50%); box-shadow: 0 2px 12px rgba(0,0,0,0.18); }
+</style>""", unsafe_allow_html=True)
 
-  /* ── Card branco principal ── */
-  .main-card {
-    background: white;
-    border-radius: 16px 16px 0 0;
-    margin-top: 50px;
-    padding: 20px 16px 100px;
-    min-height: 80vh;
-  }
-  .store-name { font-size: 17px; font-weight: 800; text-align: center; color: #1a1a1a; margin-bottom: 4px; }
+# CSS cards
+st.markdown("""<style>
+.prod-card { background: white; border: 1.5px solid #ede8f7; border-radius: 14px; overflow: hidden; margin-bottom: 2px; transition: box-shadow 0.2s; }
+.prod-emoji-area { background: linear-gradient(135deg, #f7f2fd, #ede8f7); display: flex; align-items: center; justify-content: center; padding: 14px; font-size: 44px; min-height: 88px; }
+.prod-details { padding: 8px 10px 10px; }
+.prod-price-tag { font-size: 14px; font-weight: 800; color: #1a1a1a; }
+.prod-name-tag { font-size: 12px; color: #666; margin-top: 2px; line-height: 1.3; }
+</style>""", unsafe_allow_html=True)
 
-  /* ── Status loja ── */
-  .status-open   { color: #1a9e4a; font-size: 13px; font-weight: 700; text-align: center; margin-bottom: 16px; }
-  .status-closed { color: #d84444; font-size: 13px; font-weight: 700; text-align: center; margin-bottom: 16px; }
+# CSS tabs e botões
+st.markdown("""<style>
+.stTabs [data-baseweb="tab-list"] { gap: 6px; background: transparent !important; border-bottom: 2px solid #f0e6ff; padding-bottom: 4px; }
+.stTabs [data-baseweb="tab"] { border-radius: 20px !important; border: 1.5px solid #6A0DAD !important; padding: 5px 13px !important; font-size: 13px !important; font-weight: 700 !important; color: #6A0DAD !important; background: white !important; font-family: 'Nunito', sans-serif !important; }
+.stTabs [aria-selected="true"] { background: #6A0DAD !important; color: white !important; }
+.stTabs [data-baseweb="tab-highlight"] { display: none !important; }
+div.stButton > button { background: #6A0DAD !important; color: white !important; border-radius: 12px !important; font-weight: 800 !important; font-size: 14px !important; width: 100% !important; border: none !important; padding: 10px !important; }
+div.stButton > button:hover { opacity: 0.9 !important; }
+div.stButton > button:disabled { background: #ccc !important; color: #888 !important; }
+</style>""", unsafe_allow_html=True)
 
-  /* ── Abas de categoria ── */
-  .tabs-row {
-    display: flex; gap: 8px; overflow-x: auto;
-    padding-bottom: 6px; margin-bottom: 20px;
-    border-bottom: 1.5px solid #f0e6ff;
-    scrollbar-width: none;
-  }
-  .tabs-row::-webkit-scrollbar { display: none; }
-  .tab-pill {
-    flex-shrink: 0;
-    padding: 7px 18px;
-    border-radius: 20px;
-    border: 1.5px solid #6A0DAD;
-    font-size: 13px; font-weight: 700;
-    cursor: pointer;
-    background: white; color: #6A0DAD;
-    white-space: nowrap;
-    transition: all 0.18s;
-    font-family: 'Nunito', sans-serif;
-  }
-  .tab-pill:hover { background: #f0e6ff; }
-  .tab-pill.ativo { background: #6A0DAD; color: white; }
+# CSS resumo e utilidades
+st.markdown("""<style>
+.resumo-box { background: white; border: 2px solid #6A0DAD; border-radius: 14px; padding: 16px; margin: 12px 0; }
+.resumo-titulo { font-size: 15px; font-weight: 800; color: #6A0DAD; margin-bottom: 10px; }
+.resumo-linha { font-size: 13px; color: #444; padding: 3px 0; }
+.resumo-total { font-size: 16px; font-weight: 800; color: #1a1a1a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ede8f7; }
+.btn-whats { background: linear-gradient(90deg, #25D366, #128C7E); color: white !important; padding: 15px; text-align: center; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none !important; display: block; margin-top: 10px; box-shadow: 0 4px 12px rgba(37,211,102,0.35); }
+.fid-box { background: #fffbea; border: 1.5px solid #f5c518; border-radius: 12px; padding: 10px 14px; margin: 8px 0; font-size: 13px; color: #7a5a00; }
+.fid-brinde { background: #eafaf0; border: 1.5px solid #1a9e4a; border-radius: 12px; padding: 10px 14px; margin: 8px 0; font-size: 13px; color: #0d5c2b; font-weight: 700; }
+.sec-label { font-size: 14px; font-weight: 800; color: #444; margin-top: 16px; margin-bottom: 4px; }
+</style>""", unsafe_allow_html=True)
 
-  /* ── Título de seção ── */
-  .section-title {
-    font-size: 16px; font-weight: 800; color: #1a1a1a;
-    margin: 4px 0 14px 2px;
-  }
-
-  /* ── Grid de produtos ── */
-  .produtos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  /* ── Card de produto ── */
-  .prod-card {
-    background: white;
-    border: 1px solid #ede8f7;
-    border-radius: 12px;
-    overflow: hidden;
-    position: relative;
-    transition: transform 0.15s;
-  }
-  .prod-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(106,13,173,0.10); }
-  .prod-emoji {
-    width: 100%; height: 110px;
-    display: flex; align-items: center; justify-content: center;
-    background: #f7f2fd;
-    font-size: 42px;
-  }
-  .prod-info { padding: 8px 10px 36px; }
-  .prod-price { font-size: 13px; font-weight: 800; color: #1a1a1a; margin-bottom: 2px; }
-  .prod-name  { font-size: 12px; color: #666; line-height: 1.3; }
-
-  /* ── Botão + ── */
-  .add-btn-wrap {
-    position: absolute; bottom: 8px; right: 8px;
-  }
-
-  /* ── Checkbox estilizado como + ── */
-  .prod-check { display: none; }
-  .prod-check + label {
-    width: 30px; height: 30px; border-radius: 50%;
-    background: #6A0DAD; color: white;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 400; line-height: 1;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(106,13,173,0.30);
-    transition: transform 0.15s, background 0.15s;
-    user-select: none;
-  }
-  .prod-check:checked + label {
-    background: #1a9e4a;
-    font-size: 16px;
-  }
-  .prod-check + label:hover { transform: scale(1.12); }
-
-  /* ── Resumo do pedido ── */
-  .resumo-box {
-    background: #f7f2fd;
-    border: 1.5px solid #d4b8f5;
-    border-radius: 14px;
-    padding: 16px;
-    margin: 16px 0;
-  }
-  .resumo-titulo { font-size: 15px; font-weight: 800; color: #6A0DAD; margin-bottom: 10px; }
-  .resumo-item   { font-size: 13px; color: #333; padding: 3px 0; }
-  .resumo-total  { font-size: 16px; font-weight: 800; color: #1a1a1a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #d4b8f5; }
-
-  /* ── Botão WhatsApp ── */
-  .btn-whats {
-    background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
-    color: white !important; padding: 15px; text-align: center;
-    border-radius: 12px; font-weight: 800; font-size: 15px;
-    text-decoration: none; display: block; margin-top: 12px;
-  }
-  .btn-whats:hover { opacity: 0.92; }
-
-  /* ── Fidelidade ── */
-  .fid-box {
-    background: #fffbea; border: 1.5px solid #f5c518;
-    border-radius: 12px; padding: 12px 14px; margin: 12px 0;
-    font-size: 13px; color: #7a5a00;
-  }
-  .fid-brinde {
-    background: #eafaf0; border: 1.5px solid #1a9e4a;
-    border-radius: 12px; padding: 12px 14px; margin: 12px 0;
-    font-size: 13px; color: #0d5c2b; font-weight: 700;
-  }
-
-  /* ── Inputs ── */
-  .stTextInput input {
-    border-radius: 10px !important;
-    border: 1.5px solid #d4b8f5 !important;
-    font-family: 'Nunito', sans-serif !important;
-  }
-  .stTextInput input:focus {
-    border-color: #6A0DAD !important;
-    box-shadow: 0 0 0 2px rgba(106,13,173,0.12) !important;
-  }
-  .stSelectbox > div > div {
-    border-radius: 10px !important;
-    border: 1.5px solid #d4b8f5 !important;
-  }
-
-  /* ── Botão principal ── */
-  .stButton > button {
-    background: #6A0DAD !important;
-    color: white !important;
-    border-radius: 12px !important;
-    font-weight: 800 !important;
-    font-family: 'Nunito', sans-serif !important;
-    border: none !important;
-    padding: 12px 24px !important;
-    width: 100% !important;
-    font-size: 15px !important;
-    transition: opacity 0.15s !important;
-  }
-  .stButton > button:hover { opacity: 0.88 !important; }
-  .stButton > button:disabled { background: #ccc !important; }
-
-  /* ── Barra inferior fixa ── */
-  .bottom-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 540px;
-    background: white; border-top: 1px solid #ede8f7;
-    display: flex; justify-content: space-around; padding: 10px 0 14px;
-    z-index: 999;
-  }
-  .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #999; gap: 2px; }
-  .nav-item.ativo { color: #6A0DAD; }
-  .nav-icon { font-size: 22px; }
-
-  /* ── Divider ── */
-  hr.divider { border: none; border-top: 1.5px solid #f0e6ff; margin: 20px 0; }
-
-  /* ── Label campos ── */
-  .campo-label { font-size: 13px; font-weight: 700; color: #444; margin-bottom: 4px; margin-top: 12px; }
-
-  /* ── Painel admin ── */
-  .admin-metric {
-    background: #f7f2fd; border-radius: 12px; padding: 16px;
-    text-align: center; margin-bottom: 8px;
-  }
-  .admin-metric-val { font-size: 26px; font-weight: 800; color: #6A0DAD; }
-  .admin-metric-lbl { font-size: 12px; color: #888; margin-top: 2px; }
-</style>
-""", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────
-# 4. SESSION STATE
-# ─────────────────────────────────────────────
+# ─── SESSION STATE ────────────────────────────
 
 if "admin_logado" not in st.session_state:
     st.session_state.admin_logado = False
-if "aba" not in st.session_state:
-    st.session_state.aba = "acai"
 
-# ─────────────────────────────────────────────
-# 5. ÁREA DO CLIENTE
-# ─────────────────────────────────────────────
+# ─── ÁREA DO CLIENTE ──────────────────────────
 
 if not st.session_state.admin_logado:
     loja_aberta = get_status_loja()
 
-    # ── Banner ──
+    # Banner
     st.markdown("""
-    <div class="banner">
-      <h1>🍧 JUBILEU AÇAÍ</h1>
-      <p>Delivery · Frete Grátis</p>
-      <div class="logo-circle">🍧</div>
-    </div>
-    """, unsafe_allow_html=True)
+<div class="jub-banner">
+  <h1>🍧 JUBILEU AÇAÍ</h1>
+  <p>Delivery &middot; Frete Grátis</p>
+  <div class="jub-logo">🍧</div>
+</div>""", unsafe_allow_html=True)
 
-    st.markdown('<div class="main-card">', unsafe_allow_html=True)
-    st.markdown('<div class="store-name">Jubileu Açaí</div>', unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
 
+    # Status
     if loja_aberta:
-        st.markdown('<div class="status-open">🟢 ESTAMOS ABERTOS! PEÇA JÁ O SEU.</div>', unsafe_allow_html=True)
+        st.success("🟢 ESTAMOS ABERTOS! PEÇA JÁ O SEU.")
     else:
-        st.markdown('<div class="status-closed">🔴 FECHADO NO MOMENTO</div>', unsafe_allow_html=True)
+        st.error("🔴 FECHADO NO MOMENTO — Em breve estamos de volta!")
 
-    # ── Abas de navegação ──
-    abas = {
-        "acai":       "Monte o Seu",
-        "complementos": "Complementos",
-        "garrafa":    "Açaí na Garrafa",
-        "chocolate":  "Chocolate Quente",
-    }
+    # Carrinho (lista mutável — funciona por referência)
+    cart = []
 
-    tabs_html = '<div class="tabs-row">'
-    for key, label in abas.items():
-        ativo = "ativo" if st.session_state.aba == key else ""
-        tabs_html += f'<button class="tab-pill {ativo}" onclick="window.location.href=\'?aba={key}\'">{label}</button>'
-    tabs_html += "</div>"
-    st.markdown(tabs_html, unsafe_allow_html=True)
-
-    # Lê parâmetro de aba da URL
-    params = st.query_params
-    if "aba" in params:
-        st.session_state.aba = params["aba"]
-
-    aba_atual = st.session_state.aba
-
-    # Usa lista mutável para acumular itens em todas as abas
-    _carrinho: list = []
-    _total_ref = [0.0]  # lista para ser mutável dentro das funções
-
-    def render_grid(produtos: dict, prefix: str):
-        cols_per_row = 2
-        prod_list = list(produtos.items())
-        for i in range(0, len(prod_list), cols_per_row):
-            cols = st.columns(cols_per_row)
-            for j, (nome, preco) in enumerate(prod_list[i:i+cols_per_row]):
+    def render_grid(produtos, prefix):
+        items = list(produtos.items())
+        for i in range(0, len(items), 2):
+            row = items[i:i+2]
+            cols = st.columns(2)
+            for j, (nome, preco) in enumerate(row):
                 with cols[j]:
                     emoji = EMOJIS.get(nome, "🍧")
-                    st.markdown(f"""
-                    <div class="prod-card">
-                      <div class="prod-emoji">{emoji}</div>
-                      <div class="prod-info">
-                        <div class="prod-price">R$ {preco:.2f}</div>
-                        <div class="prod-name">{nome}</div>
-                      </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    key = f"{prefix}_{nome}"
-                    selecionado = st.checkbox(f"Adicionar {nome}", key=key, label_visibility="collapsed")
-                    if selecionado:
-                        _carrinho.append(nome)
-                        _total_ref[0] += preco
+                    st.markdown(
+                        f'<div class="prod-card">'
+                        f'<div class="prod-emoji-area">{emoji}</div>'
+                        f'<div class="prod-details">'
+                        f'<div class="prod-price-tag">R$ {preco:.2f}</div>'
+                        f'<div class="prod-name-tag">{nome}</div>'
+                        f'</div></div>',
+                        unsafe_allow_html=True
+                    )
+                    if st.checkbox("＋ Adicionar", key=f"{prefix}_{nome}"):
+                        cart.append((nome, preco))
 
-    itens_pedido = _carrinho
-    def get_total(): return _total_ref[0]
+    # Abas de navegação (nativas do Streamlit — mais estável)
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🍧 Monte o Seu",
+        "➕ Complementos",
+        "🥤 Na Garrafa",
+        "☕ Chocolate"
+    ])
 
-    # ── Conteúdo por aba ──
-    if aba_atual == "acai":
-        st.markdown('<div class="section-title">Monte de seu jeito</div>', unsafe_allow_html=True)
+    with tab1:
         render_grid(ACAI_TAMANHOS, "acai")
 
-    elif aba_atual == "complementos":
-        st.markdown('<div class="section-title">Complementos</div>', unsafe_allow_html=True)
+    with tab2:
         render_grid(COMPLEMENTOS, "comp")
 
-    elif aba_atual == "garrafa":
-        st.markdown('<div class="section-title">Açaí na Garrafa</div>', unsafe_allow_html=True)
+    with tab3:
         render_grid(GARRAFAS, "garr")
 
-    elif aba_atual == "chocolate":
-        st.markdown('<div class="section-title">Chocolate Quente</div>', unsafe_allow_html=True)
+    with tab4:
         render_grid(CHOCOLATE_QUENTE, "choc")
 
+    st.markdown("---")
+
     # ── Identificação ──
-    st.markdown('<hr class="divider">', unsafe_allow_html=True)
-    st.markdown('<div class="campo-label">👤 Seu nome</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-label">👤 Seus dados</div>', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
-    np_ = c1.text_input("Nome", placeholder="Nome", label_visibility="collapsed").strip()
-    sp_ = c2.text_input("Sobrenome", placeholder="Sobrenome", label_visibility="collapsed").strip()
+    np_ = c1.text_input("Nome", placeholder="Nome", label_visibility="visible").strip()
+    sp_ = c2.text_input("Sobrenome", placeholder="Sobrenome", label_visibility="visible").strip()
     nome_completo = f"{np_} {sp_}".upper().strip()
 
-    st.markdown('<div class="campo-label">📱 WhatsApp / Telefone</div>', unsafe_allow_html=True)
-    telefone = st.text_input("Telefone", placeholder="(37) 99999-9999", label_visibility="collapsed").strip()
+    telefone = st.text_input("📱 WhatsApp / Telefone", placeholder="(37) 99999-9999").strip()
 
     # ── Fidelidade ──
     brinde_ativo = False
@@ -489,14 +281,14 @@ if not st.session_state.admin_logado:
             st.progress(q / 10)
 
     # ── Endereço ──
-    st.markdown('<div class="campo-label">📍 Endereço de entrega</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-label">📍 Endereço de entrega</div>', unsafe_allow_html=True)
     col_rua, col_num = st.columns([3, 1])
-    rua    = col_rua.text_input("Rua", placeholder="Rua / Avenida", label_visibility="collapsed")
-    numero = col_num.text_input("Nº", placeholder="Nº", label_visibility="collapsed")
-    bairro = st.text_input("Bairro", placeholder="Bairro", label_visibility="collapsed")
+    rua = col_rua.text_input("Rua", placeholder="Rua / Avenida")
+    numero = col_num.text_input("Nº", placeholder="Nº")
+    bairro = st.text_input("Bairro", placeholder="Bairro")
 
     # ── Pagamento ──
-    st.markdown('<div class="campo-label">💳 Forma de pagamento</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-label">💳 Forma de pagamento</div>', unsafe_allow_html=True)
     pag = st.selectbox("Pagamento", ["Pix", "Cartão", "Dinheiro"], label_visibility="collapsed")
     troco_msg = ""
     if pag == "Dinheiro":
@@ -504,26 +296,26 @@ if not st.session_state.admin_logado:
             v = st.text_input("Troco para quanto?", placeholder="Ex: R$ 50,00")
             troco_msg = f" (Troco para {v})"
 
-    total_itens = get_total()
+    # ── Resumo e finalizar ──
+    total_itens = sum(p for _, p in cart)
     total_final = 0.00 if brinde_ativo else total_itens
 
-    # ── Resumo e finalizar ──
-    if itens_pedido:
-        itens_str = ""
-        for item in itens_pedido:
-            preco_item = {**ACAI_TAMANHOS, **COMPLEMENTOS, **GARRAFAS, **CHOCOLATE_QUENTE}.get(item, 0)
-            itens_str += f'<div class="resumo-item">• {item} — R$ {preco_item:.2f}</div>'
-
-        brinde_html = '<div class="resumo-item" style="color:#1a9e4a;">🎁 Brinde Fidelidade Aplicado!</div>' if brinde_ativo else ""
-
-        st.markdown(f"""
-        <div class="resumo-box">
-          <div class="resumo-titulo">🧾 Resumo do Pedido</div>
-          {itens_str}
-          {brinde_html}
-          <div class="resumo-total">TOTAL: R$ {total_final:.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    if cart:
+        linhas_html = "".join(
+            f'<div class="resumo-linha">• {n} — R$ {p:.2f}</div>' for n, p in cart
+        )
+        brinde_html = (
+            '<div class="resumo-linha" style="color:#1a9e4a;font-weight:700;">🎁 Brinde Fidelidade Aplicado!</div>'
+            if brinde_ativo else ""
+        )
+        st.markdown(
+            f'<div class="resumo-box">'
+            f'<div class="resumo-titulo">🧾 Resumo do Pedido</div>'
+            f'{linhas_html}{brinde_html}'
+            f'<div class="resumo-total">TOTAL: R$ {total_final:.2f}</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
         if st.button("✅ FINALIZAR PEDIDO", disabled=not loja_aberta):
             if not (np_ and rua and numero and bairro):
@@ -531,7 +323,8 @@ if not st.session_state.admin_logado:
             elif not telefone:
                 st.warning("Preencha o telefone para contato!")
             else:
-                registrar_venda_db(nome_completo, telefone, total_final, ", ".join(itens_pedido))
+                nomes = [n for n, _ in cart]
+                registrar_venda_db(nome_completo, telefone, total_final, ", ".join(nomes))
                 atualizar_fidelidade_db(nome_completo, brinde_ativo)
                 msg = (
                     f"*NOVO PEDIDO JUBILEU AÇAÍ*\n"
@@ -540,7 +333,7 @@ if not st.session_state.admin_logado:
                     f"*Telefone:* {telefone}\n"
                     f"*Endereço:* {rua}, {numero} - {bairro}\n"
                     f"------------------\n"
-                    f"*Itens:* {', '.join(itens_pedido)}\n"
+                    f"*Itens:* {', '.join(nomes)}\n"
                     f"*Pagamento:* {pag}{troco_msg}\n"
                     f"*TOTAL: R$ {total_final:.2f}*"
                 )
@@ -550,31 +343,12 @@ if not st.session_state.admin_logado:
                     unsafe_allow_html=True,
                 )
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # ── Barra inferior fixa ──
-    st.markdown("""
-    <div class="bottom-bar">
-      <div class="nav-item ativo">
-        <span class="nav-icon">☰</span>
-        <span>menu</span>
-      </div>
-      <div class="nav-item">
-        <span class="nav-icon">🛒</span>
-        <span>pedidos</span>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ── Acesso admin discreto ──
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    st.markdown("---")
     if st.button("v2.0", help="Sistema"):
         st.session_state.admin_logado = "solicitar_senha"
         st.rerun()
 
-# ─────────────────────────────────────────────
-# 6. LOGIN ADMIN
-# ─────────────────────────────────────────────
+# ─── LOGIN ADMIN ──────────────────────────────
 
 if st.session_state.admin_logado == "solicitar_senha":
     st.markdown("### 🔐 Acesso Restrito")
@@ -592,9 +366,7 @@ if st.session_state.admin_logado == "solicitar_senha":
         st.session_state.admin_logado = False
         st.rerun()
 
-# ─────────────────────────────────────────────
-# 7. PAINEL DO DONO
-# ─────────────────────────────────────────────
+# ─── PAINEL DO DONO ───────────────────────────
 
 if st.session_state.admin_logado is True:
     st.title("📊 Gestão Jubileu Açaí")
@@ -613,12 +385,9 @@ if st.session_state.admin_logado is True:
         df_v = pd.read_sql_query("SELECT * FROM vendas", conn)
 
     if not df_v.empty:
-        total = df_v["total"].sum()
-        qtd   = len(df_v)
-
         c1, c2 = st.columns(2)
-        c1.markdown(f'<div class="admin-metric"><div class="admin-metric-val">R$ {total:.2f}</div><div class="admin-metric-lbl">Faturamento Total</div></div>', unsafe_allow_html=True)
-        c2.markdown(f'<div class="admin-metric"><div class="admin-metric-val">{qtd}</div><div class="admin-metric-lbl">Total de Pedidos</div></div>', unsafe_allow_html=True)
+        c1.metric("Faturamento Total", f"R$ {df_v['total'].sum():.2f}")
+        c2.metric("Total de Pedidos", len(df_v))
 
         st.subheader("📅 Faturamento Diário")
         df_v["Data_F"] = pd.to_datetime(df_v["data"], dayfirst=True).dt.date
@@ -631,7 +400,9 @@ if st.session_state.admin_logado is True:
         st.subheader("📋 Histórico de Pedidos")
         st.dataframe(df_v.sort_values("id", ascending=False), use_container_width=True)
 
-        csv = df_v.sort_values("id", ascending=False).to_csv(index=False, sep=";", decimal=",", encoding="utf-8-sig")
+        csv = df_v.sort_values("id", ascending=False).to_csv(
+            index=False, sep=";", decimal=",", encoding="utf-8-sig"
+        )
         st.download_button(
             "⬇️ Exportar CSV",
             data=csv,
