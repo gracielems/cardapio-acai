@@ -6,7 +6,7 @@ from datetime import datetime
 from contextlib import contextmanager
 import urllib.parse
 
-# ─── PRODUTOS ────────────────────────────────
+# ─── PRODUTOS E PREÇOS ───────────────────────
 
 ACAI_TAMANHOS = {
     "Açaí 300ml": 13.00,
@@ -33,10 +33,10 @@ COMPLEMENTOS = {
 }
 
 GARRAFAS = {
-    "Tradicional": 10.00,
-    "Leite em Pó": 13.00,
-    "Morango": 13.00,
-    "Maracujá": 13.00,
+    "Garrafa Tradicional": 10.00,
+    "Garrafa Leite em Pó": 13.00,
+    "Garrafa Morango": 13.00,
+    "Garrafa Maracujá": 13.00,
 }
 
 CHOCOLATE_QUENTE = {"Chocolate Quente": 12.00}
@@ -47,7 +47,8 @@ EMOJIS = {
     "Ovomaltine": "☕", "Confete": "🎉", "Gotas de Chocolate": "🍫", "Fine Beijo": "🍬",
     "Fine Banana": "🍌", "Paçoca": "🍬", "Granola": "🌾", "Uva Verde": "🍇",
     "Chantilly": "🍦", "Mousse de Maracujá": "🌸",
-    "Tradicional": "🥤", "Morango": "🥤", "Maracujá": "🥤",
+    "Garrafa Tradicional": "🥤", "Garrafa Leite em Pó": "🥤",
+    "Garrafa Morango": "🥤", "Garrafa Maracujá": "🥤",
     "Chocolate Quente": "☕",
 }
 
@@ -135,58 +136,63 @@ init_db()
 
 st.set_page_config(page_title="Jubileu Açaí", page_icon="🍧", layout="centered")
 
-# Fonte Google
 st.markdown(
     '<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">',
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
-# CSS base
+# CSS 1 — reset e scroll
 st.markdown("""<style>
 html, body, [class*="css"] { font-family: 'Nunito', sans-serif !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 54px; }
 .stApp { background: #f5f0fa !important; }
-#MainMenu, footer, header { visibility: hidden; }
+[data-testid="stHeader"] { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+#MainMenu { display: none !important; }
+footer { display: none !important; }
 .block-container { padding-top: 0 !important; padding-left: 0.8rem !important; padding-right: 0.8rem !important; max-width: 560px !important; }
 </style>""", unsafe_allow_html=True)
 
-# CSS banner
+# CSS 2 — banner
 st.markdown("""<style>
 .jub-banner { background: linear-gradient(135deg, #6A0DAD 0%, #9b30d9 100%); padding: 28px 20px 52px; text-align: center; position: relative; border-radius: 0 0 24px 24px; }
 .jub-banner h1 { color: white; font-size: 22px; font-weight: 800; margin: 0; letter-spacing: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 .jub-banner p { color: rgba(255,255,255,0.85); font-size: 13px; margin: 5px 0 0; }
-.jub-logo { width: 66px; height: 66px; border-radius: 50%; background: white; border: 3px solid white; display: flex; align-items: center; justify-content: center; font-size: 28px; position: absolute; bottom: -33px; left: 50%; transform: translateX(-50%); box-shadow: 0 2px 12px rgba(0,0,0,0.18); }
+.jub-logo { width: 66px; height: 66px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 28px; position: absolute; bottom: -33px; left: 50%; transform: translateX(-50%); box-shadow: 0 2px 12px rgba(0,0,0,0.18); }
 </style>""", unsafe_allow_html=True)
 
-# CSS cards
+# CSS 3 — barra de categorias sticky
 st.markdown("""<style>
-.prod-card { background: white; border: 1.5px solid #ede8f7; border-radius: 14px; overflow: hidden; margin-bottom: 2px; transition: box-shadow 0.2s; }
+.sticky-nav { position: sticky; top: 0; z-index: 999; background: white; border-bottom: 2px solid #f0e6ff; box-shadow: 0 2px 8px rgba(0,0,0,0.07); display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; margin: 0 -0.8rem; padding: 10px 0.8rem; scrollbar-width: none; }
+.sticky-nav::-webkit-scrollbar { display: none; }
+.nav-pill { display: inline-block; padding: 7px 15px; border-radius: 20px; border: 1.5px solid #6A0DAD; font-size: 13px; font-weight: 700; color: #6A0DAD; background: white; text-decoration: none; white-space: nowrap; font-family: 'Nunito', sans-serif; cursor: pointer; transition: all 0.18s; flex-shrink: 0; }
+.nav-pill:hover { background: #f0e6ff; color: #6A0DAD; text-decoration: none; }
+</style>""", unsafe_allow_html=True)
+
+# CSS 4 — cards e seções
+st.markdown("""<style>
+.sec-anchor { display: block; scroll-margin-top: 54px; }
+.sec-header { font-size: 17px; font-weight: 800; color: #1a1a1a; margin: 18px 0 10px 2px; padding-bottom: 6px; border-bottom: 2px solid #f0e6ff; }
+.prod-card { background: white; border: 1.5px solid #ede8f7; border-radius: 14px; overflow: hidden; margin-bottom: 2px; }
 .prod-emoji-area { background: linear-gradient(135deg, #f7f2fd, #ede8f7); display: flex; align-items: center; justify-content: center; padding: 14px; font-size: 44px; min-height: 88px; }
 .prod-details { padding: 8px 10px 10px; }
 .prod-price-tag { font-size: 14px; font-weight: 800; color: #1a1a1a; }
 .prod-name-tag { font-size: 12px; color: #666; margin-top: 2px; line-height: 1.3; }
 </style>""", unsafe_allow_html=True)
 
-# CSS tabs e botões
-st.markdown("""<style>
-.stTabs [data-baseweb="tab-list"] { gap: 6px; background: transparent !important; border-bottom: 2px solid #f0e6ff; padding-bottom: 4px; }
-.stTabs [data-baseweb="tab"] { border-radius: 20px !important; border: 1.5px solid #6A0DAD !important; padding: 5px 13px !important; font-size: 13px !important; font-weight: 700 !important; color: #6A0DAD !important; background: white !important; font-family: 'Nunito', sans-serif !important; }
-.stTabs [aria-selected="true"] { background: #6A0DAD !important; color: white !important; }
-.stTabs [data-baseweb="tab-highlight"] { display: none !important; }
-div.stButton > button { background: #6A0DAD !important; color: white !important; border-radius: 12px !important; font-weight: 800 !important; font-size: 14px !important; width: 100% !important; border: none !important; padding: 10px !important; }
-div.stButton > button:hover { opacity: 0.9 !important; }
-div.stButton > button:disabled { background: #ccc !important; color: #888 !important; }
-</style>""", unsafe_allow_html=True)
-
-# CSS resumo e utilidades
+# CSS 5 — formulário e checkout
 st.markdown("""<style>
 .resumo-box { background: white; border: 2px solid #6A0DAD; border-radius: 14px; padding: 16px; margin: 12px 0; }
 .resumo-titulo { font-size: 15px; font-weight: 800; color: #6A0DAD; margin-bottom: 10px; }
 .resumo-linha { font-size: 13px; color: #444; padding: 3px 0; }
 .resumo-total { font-size: 16px; font-weight: 800; color: #1a1a1a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ede8f7; }
-.btn-whats { background: linear-gradient(90deg, #25D366, #128C7E); color: white !important; padding: 15px; text-align: center; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none !important; display: block; margin-top: 10px; box-shadow: 0 4px 12px rgba(37,211,102,0.35); }
+.btn-whats { background: linear-gradient(90deg, #25D366, #128C7E); color: white !important; padding: 15px; text-align: center; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none !important; display: block; margin-top: 10px; box-shadow: 0 4px 12px rgba(37,211,102,0.3); }
 .fid-box { background: #fffbea; border: 1.5px solid #f5c518; border-radius: 12px; padding: 10px 14px; margin: 8px 0; font-size: 13px; color: #7a5a00; }
 .fid-brinde { background: #eafaf0; border: 1.5px solid #1a9e4a; border-radius: 12px; padding: 10px 14px; margin: 8px 0; font-size: 13px; color: #0d5c2b; font-weight: 700; }
 .sec-label { font-size: 14px; font-weight: 800; color: #444; margin-top: 16px; margin-bottom: 4px; }
+div.stButton > button { background: #6A0DAD !important; color: white !important; border-radius: 12px !important; font-weight: 800 !important; font-size: 14px !important; width: 100% !important; border: none !important; padding: 10px !important; }
+div.stButton > button:hover { opacity: 0.9 !important; }
+div.stButton > button:disabled { background: #ccc !important; color: #888 !important; }
 </style>""", unsafe_allow_html=True)
 
 # ─── SESSION STATE ────────────────────────────
@@ -194,14 +200,15 @@ st.markdown("""<style>
 if "admin_logado" not in st.session_state:
     st.session_state.admin_logado = False
 
-# ─── ÁREA DO CLIENTE ──────────────────────────
+# ─────────────────────────────────────────────
+# ÁREA DO CLIENTE
+# ─────────────────────────────────────────────
 
 if not st.session_state.admin_logado:
     loja_aberta = get_status_loja()
 
-    # Banner
-    st.markdown("""
-<div class="jub-banner">
+    # Banner roxo
+    st.markdown("""<div class="jub-banner">
   <h1>🍧 JUBILEU AÇAÍ</h1>
   <p>Delivery &middot; Frete Grátis</p>
   <div class="jub-logo">🍧</div>
@@ -209,13 +216,21 @@ if not st.session_state.admin_logado:
 
     st.markdown("<br><br>", unsafe_allow_html=True)
 
-    # Status
+    # Status da loja
     if loja_aberta:
         st.success("🟢 ESTAMOS ABERTOS! PEÇA JÁ O SEU.")
     else:
         st.error("🔴 FECHADO NO MOMENTO — Em breve estamos de volta!")
 
-    # Carrinho (lista mutável — funciona por referência)
+    # ── Barra de categorias (sticky, rola com atalhos) ──
+    st.markdown("""<div class="sticky-nav">
+  <a href="#sec-acai" class="nav-pill">🍧 Monte o Seu</a>
+  <a href="#sec-comp" class="nav-pill">➕ Complementos</a>
+  <a href="#sec-garr" class="nav-pill">🥤 Na Garrafa</a>
+  <a href="#sec-choc" class="nav-pill">☕ Chocolate</a>
+</div>""", unsafe_allow_html=True)
+
+    # Carrinho acumulado
     cart = []
 
     def render_grid(produtos, prefix):
@@ -233,43 +248,41 @@ if not st.session_state.admin_logado:
                         f'<div class="prod-price-tag">R$ {preco:.2f}</div>'
                         f'<div class="prod-name-tag">{nome}</div>'
                         f'</div></div>',
-                        unsafe_allow_html=True
+                        unsafe_allow_html=True,
                     )
                     if st.checkbox("＋ Adicionar", key=f"{prefix}_{nome}"):
                         cart.append((nome, preco))
 
-    # Abas de navegação (nativas do Streamlit — mais estável)
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🍧 Monte o Seu",
-        "➕ Complementos",
-        "🥤 Na Garrafa",
-        "☕ Chocolate"
-    ])
+    # ── SEÇÃO: Monte o Seu ──
+    st.markdown('<div id="sec-acai" class="sec-anchor"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-header">🍧 Monte de Seu Jeito</div>', unsafe_allow_html=True)
+    render_grid(ACAI_TAMANHOS, "acai")
 
-    with tab1:
-        render_grid(ACAI_TAMANHOS, "acai")
+    # ── SEÇÃO: Complementos ──
+    st.markdown('<div id="sec-comp" class="sec-anchor"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-header">➕ Complementos</div>', unsafe_allow_html=True)
+    render_grid(COMPLEMENTOS, "comp")
 
-    with tab2:
-        render_grid(COMPLEMENTOS, "comp")
+    # ── SEÇÃO: Açaí na Garrafa ──
+    st.markdown('<div id="sec-garr" class="sec-anchor"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-header">🥤 Açaí na Garrafa</div>', unsafe_allow_html=True)
+    render_grid(GARRAFAS, "garr")
 
-    with tab3:
-        render_grid(GARRAFAS, "garr")
-
-    with tab4:
-        render_grid(CHOCOLATE_QUENTE, "choc")
+    # ── SEÇÃO: Chocolate Quente ──
+    st.markdown('<div id="sec-choc" class="sec-anchor"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-header">☕ Chocolate Quente</div>', unsafe_allow_html=True)
+    render_grid(CHOCOLATE_QUENTE, "choc")
 
     st.markdown("---")
 
-    # ── Identificação ──
+    # ── Formulário ──
     st.markdown('<div class="sec-label">👤 Seus dados</div>', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
-    np_ = c1.text_input("Nome", placeholder="Nome", label_visibility="visible").strip()
-    sp_ = c2.text_input("Sobrenome", placeholder="Sobrenome", label_visibility="visible").strip()
+    np_ = c1.text_input("Nome", placeholder="Nome").strip()
+    sp_ = c2.text_input("Sobrenome", placeholder="Sobrenome").strip()
     nome_completo = f"{np_} {sp_}".upper().strip()
-
     telefone = st.text_input("📱 WhatsApp / Telefone", placeholder="(37) 99999-9999").strip()
 
-    # ── Fidelidade ──
     brinde_ativo = False
     if np_ and sp_:
         q = carregar_fidelidade_db(nome_completo)
@@ -280,14 +293,12 @@ if not st.session_state.admin_logado:
             st.markdown(f'<div class="fid-box">⭐ Fidelidade: <b>{q}/10</b> pedidos</div>', unsafe_allow_html=True)
             st.progress(q / 10)
 
-    # ── Endereço ──
     st.markdown('<div class="sec-label">📍 Endereço de entrega</div>', unsafe_allow_html=True)
     col_rua, col_num = st.columns([3, 1])
-    rua = col_rua.text_input("Rua", placeholder="Rua / Avenida")
+    rua    = col_rua.text_input("Rua", placeholder="Rua / Avenida")
     numero = col_num.text_input("Nº", placeholder="Nº")
     bairro = st.text_input("Bairro", placeholder="Bairro")
 
-    # ── Pagamento ──
     st.markdown('<div class="sec-label">💳 Forma de pagamento</div>', unsafe_allow_html=True)
     pag = st.selectbox("Pagamento", ["Pix", "Cartão", "Dinheiro"], label_visibility="collapsed")
     troco_msg = ""
@@ -301,8 +312,8 @@ if not st.session_state.admin_logado:
     total_final = 0.00 if brinde_ativo else total_itens
 
     if cart:
-        linhas_html = "".join(
-            f'<div class="resumo-linha">• {n} — R$ {p:.2f}</div>' for n, p in cart
+        linhas = "".join(
+            f'<div class="resumo-linha">• {n} &mdash; R$ {p:.2f}</div>' for n, p in cart
         )
         brinde_html = (
             '<div class="resumo-linha" style="color:#1a9e4a;font-weight:700;">🎁 Brinde Fidelidade Aplicado!</div>'
@@ -311,10 +322,10 @@ if not st.session_state.admin_logado:
         st.markdown(
             f'<div class="resumo-box">'
             f'<div class="resumo-titulo">🧾 Resumo do Pedido</div>'
-            f'{linhas_html}{brinde_html}'
+            f'{linhas}{brinde_html}'
             f'<div class="resumo-total">TOTAL: R$ {total_final:.2f}</div>'
             f'</div>',
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         if st.button("✅ FINALIZAR PEDIDO", disabled=not loja_aberta):
@@ -348,7 +359,9 @@ if not st.session_state.admin_logado:
         st.session_state.admin_logado = "solicitar_senha"
         st.rerun()
 
-# ─── LOGIN ADMIN ──────────────────────────────
+# ─────────────────────────────────────────────
+# LOGIN ADMIN
+# ─────────────────────────────────────────────
 
 if st.session_state.admin_logado == "solicitar_senha":
     st.markdown("### 🔐 Acesso Restrito")
@@ -366,7 +379,9 @@ if st.session_state.admin_logado == "solicitar_senha":
         st.session_state.admin_logado = False
         st.rerun()
 
-# ─── PAINEL DO DONO ───────────────────────────
+# ─────────────────────────────────────────────
+# PAINEL DO DONO
+# ─────────────────────────────────────────────
 
 if st.session_state.admin_logado is True:
     st.title("📊 Gestão Jubileu Açaí")
