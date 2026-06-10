@@ -41,6 +41,16 @@ GARRAFAS = {
 
 CHOCOLATE_QUENTE = {"Chocolate Quente": 12.00}
 
+# Curadoria dos mais pedidos — edite à vontade
+MAIS_PEDIDOS = {
+    "Açaí 500ml": 18.00,
+    "Açaí 700ml": 23.00,
+    "Açaí 1 Litro": 32.00,
+    "Garrafa Tradicional": 10.00,
+    "Nutella": 8.00,
+    "Mousse de Maracujá": 5.00,
+}
+
 EMOJIS = {
     "Açaí 300ml": "🍧", "Açaí 500ml": "🍧", "Açaí 700ml": "🍧", "Açaí 1 Litro": "🍧",
     "Leite em Pó": "🥛", "Leite Condensado": "🍯", "Nutella": "🍫", "Creme de Avelã": "🍫",
@@ -173,6 +183,7 @@ st.markdown("""<style>
 st.markdown("""<style>
 .sec-anchor { display: block; scroll-margin-top: 54px; }
 .sec-header { font-size: 17px; font-weight: 800; color: #1a1a1a; margin: 18px 0 10px 2px; padding-bottom: 6px; border-bottom: 2px solid #f0e6ff; }
+.sec-header-top { color: #6A0DAD; border-bottom: 2px solid #6A0DAD; }
 .prod-card { background: white; border: 1.5px solid #ede8f7; border-radius: 14px; overflow: hidden; margin-bottom: 2px; }
 .prod-emoji-area { background: linear-gradient(135deg, #f7f2fd, #ede8f7); display: flex; align-items: center; justify-content: center; padding: 14px; font-size: 44px; min-height: 88px; }
 .prod-details { padding: 8px 10px 10px; }
@@ -224,6 +235,7 @@ if not st.session_state.admin_logado:
 
     # ── Barra de categorias (sticky, rola com atalhos) ──
     st.markdown("""<div class="sticky-nav">
+  <a href="#sec-top" class="nav-pill">⭐ Mais Pedidos</a>
   <a href="#sec-acai" class="nav-pill">🍧 Monte o Seu</a>
   <a href="#sec-comp" class="nav-pill">➕ Complementos</a>
   <a href="#sec-garr" class="nav-pill">🥤 Na Garrafa</a>
@@ -252,6 +264,11 @@ if not st.session_state.admin_logado:
                     )
                     if st.checkbox("＋ Adicionar", key=f"{prefix}_{nome}"):
                         cart.append((nome, preco))
+
+    # ── SEÇÃO: Os Mais Pedidos ──
+    st.markdown('<div id="sec-top" class="sec-anchor"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-header sec-header-top">⭐ OS MAIS PEDIDOS</div>', unsafe_allow_html=True)
+    render_grid(MAIS_PEDIDOS, "top")
 
     # ── SEÇÃO: Monte o Seu ──
     st.markdown('<div id="sec-acai" class="sec-anchor"></div>', unsafe_allow_html=True)
