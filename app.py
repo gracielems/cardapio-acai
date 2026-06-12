@@ -51,6 +51,36 @@ MAIS_PEDIDOS = {
     "Mousse de Maracujá": 5.00,
 }
 
+# ─── IMAGENS DOS PRODUTOS ─────────────────────
+# Arquivos ficam em: static/ no repositório GitHub
+# URL servida pelo Streamlit: app/static/<arquivo>
+
+IMAGENS = {
+    # Açaís
+    "Açaí 300ml":         "acai_300ml.jpg",
+    "Açaí 500ml":         "acai_500ml.jpg",
+    "Açaí 700ml":         "acai_700ml.jpg",
+    "Açaí 1 Litro":       "Potede1litro.jpg",
+    # Complementos
+    "Leite em Pó":        "leiteempo.jpg",
+    "Leite Condensado":   "LeiteCondensado.jpg",
+    "Nutella":            "nutella.jpg",
+    "Creme de Avelã":     "CremedeAvelã.jpg",
+    "Ovomaltine":         "Ovomaltine.jpg",
+    "Confete":            "Confeitos.jpg",
+    "Gotas de Chocolate": "GotasdeChocolate.jpg",
+    "Fine Beijo":         "FineBeijo.jpg",
+    "Fine Banana":        "FineBanana.jpg",
+    "Paçoca":             "Paçoca.jpg",
+    "Granola":            "Granola.jpg",
+    "Uva Verde":          "UvaVerde.jpg",
+    "Chantilly":          "Chantilly.jpg",
+    "Mousse de Maracujá": "MoussedeMaracujá.jpg",
+    # Garrafas
+    "Garrafa Morango":    "Morango.jpg",
+}
+
+# Emojis de fallback (aparecem se a foto não carregar)
 EMOJIS = {
     "Açaí 300ml": "🍧", "Açaí 500ml": "🍧", "Açaí 700ml": "🍧", "Açaí 1 Litro": "🍧",
     "Leite em Pó": "🥛", "Leite Condensado": "🍯", "Nutella": "🍫", "Creme de Avelã": "🍫",
@@ -168,7 +198,8 @@ st.markdown("""<style>
 .jub-banner { background: linear-gradient(135deg, #6A0DAD 0%, #9b30d9 100%); padding: 28px 20px 52px; text-align: center; position: relative; border-radius: 0 0 24px 24px; }
 .jub-banner h1 { color: white; font-size: 22px; font-weight: 800; margin: 0; letter-spacing: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 .jub-banner p { color: rgba(255,255,255,0.85); font-size: 13px; margin: 5px 0 0; }
-.jub-logo { width: 66px; height: 66px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 28px; position: absolute; bottom: -33px; left: 50%; transform: translateX(-50%); box-shadow: 0 2px 12px rgba(0,0,0,0.18); }
+.jub-logo { width: 66px; height: 66px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 28px; position: absolute; bottom: -33px; left: 50%; transform: translateX(-50%); box-shadow: 0 2px 12px rgba(0,0,0,0.18); overflow: hidden; }
+.jub-logo img { width: 100%; height: 100%; object-fit: cover; }
 </style>""", unsafe_allow_html=True)
 
 # CSS 3 — barra de categorias sticky
@@ -179,13 +210,16 @@ st.markdown("""<style>
 .nav-pill:hover { background: #f0e6ff; color: #6A0DAD; text-decoration: none; }
 </style>""", unsafe_allow_html=True)
 
-# CSS 4 — cards e seções
+# CSS 4 — cards com imagem
 st.markdown("""<style>
 .sec-anchor { display: block; scroll-margin-top: 54px; }
 .sec-header { font-size: 17px; font-weight: 800; color: #1a1a1a; margin: 18px 0 10px 2px; padding-bottom: 6px; border-bottom: 2px solid #f0e6ff; }
 .sec-header-top { color: #6A0DAD; border-bottom: 2px solid #6A0DAD; }
 .prod-card { background: white; border: 1.5px solid #ede8f7; border-radius: 14px; overflow: hidden; margin-bottom: 2px; }
-.prod-emoji-area { background: linear-gradient(135deg, #f7f2fd, #ede8f7); display: flex; align-items: center; justify-content: center; padding: 14px; font-size: 44px; min-height: 88px; }
+.prod-img-area { width: 100%; height: 120px; overflow: hidden; background: linear-gradient(135deg, #f7f2fd, #ede8f7); }
+.prod-img-area img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.2s; }
+.prod-img-area img:hover { transform: scale(1.04); }
+.prod-emoji-area { background: linear-gradient(135deg, #f7f2fd, #ede8f7); display: flex; align-items: center; justify-content: center; padding: 14px; font-size: 44px; min-height: 120px; }
 .prod-details { padding: 8px 10px 10px; }
 .prod-price-tag { font-size: 14px; font-weight: 800; color: #1a1a1a; }
 .prod-name-tag { font-size: 12px; color: #666; margin-top: 2px; line-height: 1.3; }
@@ -218,22 +252,21 @@ if "admin_logado" not in st.session_state:
 if not st.session_state.admin_logado:
     loja_aberta = get_status_loja()
 
-    # Banner roxo
+    # Banner com logo real
     st.markdown("""<div class="jub-banner">
   <h1>🍧 JUBILEU AÇAÍ</h1>
   <p>Delivery &middot; Frete Grátis</p>
-  <div class="jub-logo">🍧</div>
+  <div class="jub-logo"><img src="app/static/logo3d.jpg.png" alt="Logo" onerror="this.outerHTML='🍧'"></div>
 </div>""", unsafe_allow_html=True)
 
     st.markdown("<br><br>", unsafe_allow_html=True)
 
-    # Status da loja
     if loja_aberta:
         st.success("🟢 ESTAMOS ABERTOS! PEÇA JÁ O SEU.")
     else:
         st.error("🔴 FECHADO NO MOMENTO — Em breve estamos de volta!")
 
-    # ── Barra de categorias (sticky, rola com atalhos) ──
+    # Barra de categorias sticky
     st.markdown("""<div class="sticky-nav">
   <a href="#sec-top" class="nav-pill">⭐ Mais Pedidos</a>
   <a href="#sec-acai" class="nav-pill">🍧 Monte o Seu</a>
@@ -252,10 +285,22 @@ if not st.session_state.admin_logado:
             cols = st.columns(2)
             for j, (nome, preco) in enumerate(row):
                 with cols[j]:
-                    emoji = EMOJIS.get(nome, "🍧")
+                    img_file = IMAGENS.get(nome)
+                    if img_file:
+                        img_url = "app/static/" + urllib.parse.quote(img_file)
+                        area = (
+                            f'<div class="prod-img-area">'
+                            f'<img src="{img_url}" alt="{nome}" '
+                            f'loading="lazy">'
+                            f'</div>'
+                        )
+                    else:
+                        emoji = EMOJIS.get(nome, "🍧")
+                        area = f'<div class="prod-emoji-area">{emoji}</div>'
+
                     st.markdown(
                         f'<div class="prod-card">'
-                        f'<div class="prod-emoji-area">{emoji}</div>'
+                        f'{area}'
                         f'<div class="prod-details">'
                         f'<div class="prod-price-tag">R$ {preco:.2f}</div>'
                         f'<div class="prod-name-tag">{nome}</div>'
@@ -265,7 +310,7 @@ if not st.session_state.admin_logado:
                     if st.checkbox("＋ Adicionar", key=f"{prefix}_{nome}"):
                         cart.append((nome, preco))
 
-    # ── SEÇÃO: Os Mais Pedidos ──
+    # ── SEÇÃO: Mais Pedidos ──
     st.markdown('<div id="sec-top" class="sec-anchor"></div>', unsafe_allow_html=True)
     st.markdown('<div class="sec-header sec-header-top">⭐ OS MAIS PEDIDOS</div>', unsafe_allow_html=True)
     render_grid(MAIS_PEDIDOS, "top")
@@ -324,7 +369,6 @@ if not st.session_state.admin_logado:
             v = st.text_input("Troco para quanto?", placeholder="Ex: R$ 50,00")
             troco_msg = f" (Troco para {v})"
 
-    # ── Resumo e finalizar ──
     total_itens = sum(p for _, p in cart)
     total_final = 0.00 if brinde_ativo else total_itens
 
@@ -386,7 +430,7 @@ if st.session_state.admin_logado == "solicitar_senha":
     c1, c2 = st.columns(2)
     if c1.button("Entrar"):
         if not SENHA_DONO:
-            st.error("Senha não configurada. Contate o administrador.")
+            st.error("Senha não configurada.")
         elif senha == SENHA_DONO:
             st.session_state.admin_logado = True
             st.rerun()
