@@ -52,32 +52,30 @@ MAIS_PEDIDOS = {
 }
 
 # ─── IMAGENS DOS PRODUTOS ─────────────────────
-# Arquivos ficam em: static/ no repositório GitHub
-# URL servida pelo Streamlit: app/static/<arquivo>
+# URL raw do GitHub — funciona direto, sem precisar de config.toml
+_BASE = "https://raw.githubusercontent.com/gracielems/cardapio-acai/main/static/"
 
 IMAGENS = {
-    # Açaís
-    "Açaí 300ml":         "acai_300ml.jpg",
-    "Açaí 500ml":         "acai_500ml.jpg",
-    "Açaí 700ml":         "acai_700ml.jpg",
-    "Açaí 1 Litro":       "Potede1litro.jpg",
-    # Complementos
-    "Leite em Pó":        "leiteempo.jpg",
-    "Leite Condensado":   "LeiteCondensado.jpg",
-    "Nutella":            "nutella.jpg",
-    "Creme de Avelã":     "CremedeAvela.jpg",
-    "Ovomaltine":         "Ovomaltine.jpg",
-    "Confete":            "Confeitos.jpg",
-    "Gotas de Chocolate": "GotasdeChocolate.jpg",
-    "Fine Beijo":         "FineBeijo.jpg",
-    "Fine Banana":        "FineBanana.jpg",
-    "Paçoca":             "Pacoca.jpg",
-    "Granola":            "Granola.jpg",
-    "Uva Verde":          "UvaVerde.jpg",
-    "Chantilly":          "Chantilly.jpg",
-    "Mousse de Maracujá": "MoussdeMaracuja.jpg",
-    # Garrafas
-    "Garrafa Morango":    "Morango.jpg",
+    "Açaí 300ml":         _BASE + "acai_300ml.jpg",
+    "Açaí 500ml":         _BASE + "acai_500ml.jpg",
+    "Açaí 700ml":         _BASE + "acai_700ml.jpg",
+    "Açaí 1 Litro":       _BASE + "Potede1litro.jpg",
+    "Leite em Pó":        _BASE + "leiteempo.jpg",
+    "Leite Condensado":   _BASE + "LeiteCondensado.jpg",
+    "Nutella":            _BASE + "nutella.jpg",
+    "Creme de Avelã":     _BASE + "CremedeAvela.jpg",
+    "Ovomaltine":         _BASE + "Ovomaltine.jpg",
+    "Confete":            _BASE + "Confeitos.jpg",
+    "Gotas de Chocolate": _BASE + "GotasdeChocolate.jpg",
+    "Fine Beijo":         _BASE + "FineBeijo.jpg",
+    "Fine Banana":        _BASE + "FineBanana.jpg",
+    "Paçoca":             _BASE + "Pacoca.jpg",
+    "Granola":            _BASE + "Granola.jpg",
+    "Uva Verde":          _BASE + "UvaVerde.jpg",
+    "Chantilly":          _BASE + "Chantilly.jpg",
+    "Mousse de Maracujá": _BASE + "MoussdeMaracuja.jpg",
+    "Garrafa Morango":    _BASE + "Morango.jpg",
+    "_logo":              _BASE + "logo3d.jpg.png",
 }
 
 # Emojis de fallback (aparecem se a foto não carregar)
@@ -253,10 +251,11 @@ if not st.session_state.admin_logado:
     loja_aberta = get_status_loja()
 
     # Banner com logo real
-    st.markdown("""<div class="jub-banner">
+    logo_url = IMAGENS.get("_logo", "")
+    st.markdown(f"""<div class="jub-banner">
   <h1>🍧 JUBILEU AÇAÍ</h1>
   <p>Delivery &middot; Frete Grátis</p>
-  <div class="jub-logo"><img src="app/static/logo3d.jpg.png" alt="Logo" onerror="this.outerHTML='🍧'"></div>
+  <div class="jub-logo"><img src="{logo_url}" alt="Logo" onerror="this.outerHTML='🍧'"></div>
 </div>""", unsafe_allow_html=True)
 
     st.markdown("<br><br>", unsafe_allow_html=True)
@@ -285,13 +284,11 @@ if not st.session_state.admin_logado:
             cols = st.columns(2)
             for j, (nome, preco) in enumerate(row):
                 with cols[j]:
-                    img_file = IMAGENS.get(nome)
-                    if img_file:
-                        img_url = "app/static/" + urllib.parse.quote(img_file)
+                    img_url = IMAGENS.get(nome)
+                    if img_url:
                         area = (
                             f'<div class="prod-img-area">'
-                            f'<img src="{img_url}" alt="{nome}" '
-                            f'loading="lazy">'
+                            f'<img src="{img_url}" alt="{nome}" loading="lazy">'
                             f'</div>'
                         )
                     else:
