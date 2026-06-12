@@ -73,7 +73,7 @@ IMAGENS = {
     "Granola":            _BASE + "Granola.jpg",
     "Uva Verde":          _BASE + "UvaVerde.jpg",
     "Chantilly":          _BASE + "Chantilly.jpg",
-    "Mousse de Maracujá": _BASE + "MoussdeMaracuja.jpg",
+    "Mousse de Maracujá": _BASE + "MoussedeMaracuja.jpg",
     "Garrafa Morango":    _BASE + "Morango.jpg",
     "_logo":              _BASE + "logo3d.jpg.png",
 }
